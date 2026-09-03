@@ -1,0 +1,3 @@
+import { expect, test } from '@playwright/test';
+test('landing page exposes the privacy-first weather flow', async ({ page }) => { await page.goto('/'); await expect(page.getByRole('heading', { name: /Das Wetter für deinen Ort/ })).toBeVisible(); await page.getByRole('link', { name: 'Wetter öffnen' }).first().click(); await expect(page.getByRole('heading', { name: 'Berlin' })).toBeVisible(); await expect(page.getByRole('button', { name: 'Ort suchen' })).toBeVisible(); });
+test('network and privacy view lists every default external host', async ({ page }) => { await page.goto('/privacy'); await expect(page.getByText('api.open-meteo.com')).toBeVisible(); await expect(page.getByText('geocoding-api.open-meteo.com')).toBeVisible(); });

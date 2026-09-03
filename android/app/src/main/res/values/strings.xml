@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">OpenAura</string>
+    <string name="title_activity_main">OpenAura</string>
+    <string name="package_name">org.openaura.weather</string>
+    <string name="custom_url_scheme">org.openaura.weather</string>
+</resources>

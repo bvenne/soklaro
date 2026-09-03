@@ -1,0 +1,11 @@
+name: Fehler melden
+description: Reproduzierbaren Fehler melden
+body:
+  - type: textarea
+    attributes: { label: Beschreibung }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: Schritte zur Reproduktion }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: Browser, Betriebssystem und Version }

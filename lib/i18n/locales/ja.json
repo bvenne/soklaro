@@ -1,0 +1,10 @@
+{
+  "appName": "OpenAura",
+  "search": "場所を検索",
+  "useLocation": "現在地を使用",
+  "updated": "更新済み",
+  "offline": "オフライン – 保存データ",
+  "privacy": "ネットワークとプライバシー",
+  "clear": "晴れ",
+  "rain": "雨"
+}
