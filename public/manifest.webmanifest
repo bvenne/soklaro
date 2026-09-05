@@ -5,8 +5,8 @@
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0b2829",
-  "theme_color": "#0b2829",
+  "background_color": "#132c31",
+  "theme_color": "#132c31",
   "lang": "de",
   "categories": ["weather", "utilities"],
   "icons": [

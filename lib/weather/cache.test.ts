@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { readLastPlace, saveLastPlace } from './cache';
+import { forgetPlace, readGeolocationDefault, readLastPlace, readSavedPlaces, rememberPlace, saveLastPlace, setGeolocationDefault } from './cache';
 import { berlin } from './mock';
 
 describe('last selected place', () => {
@@ -28,5 +28,29 @@ describe('last selected place', () => {
     localStorage.setItem('soklaro:last-place', JSON.stringify({ id: 'broken' }));
     expect(readLastPlace()).toBeNull();
     expect(localStorage.getItem('soklaro:last-place')).toBeNull();
+  });
+
+  it('remembers searched places without duplicates', () => {
+    rememberPlace(berlin);
+    rememberPlace(berlin);
+    const hamburg = { ...berlin, id: 'hamburg', name: 'Hamburg' };
+    rememberPlace(hamburg);
+    expect(readSavedPlaces()).toEqual([berlin, hamburg]);
+    expect(forgetPlace(berlin.id)).toEqual([hamburg]);
+  });
+
+  it('replaces an earlier GPS position instead of collecting stale positions', () => {
+    rememberPlace({ ...berlin, id: 'geo:52.5,13.4', name: 'Berlin' });
+    const potsdam = { ...berlin, id: 'geo:52.4,13.1', name: 'Potsdam' };
+    rememberPlace(potsdam);
+    expect(readSavedPlaces()).toEqual([potsdam]);
+  });
+
+  it('persists whether geolocation is the default', () => {
+    expect(readGeolocationDefault()).toBe(false);
+    setGeolocationDefault(true);
+    expect(readGeolocationDefault()).toBe(true);
+    setGeolocationDefault(false);
+    expect(readGeolocationDefault()).toBe(false);
   });
 });
