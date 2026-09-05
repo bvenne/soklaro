@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "org.openaura.weather"
+    namespace = "org.soklaro.weather"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "org.openaura.weather"
+        applicationId "org.soklaro.weather"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

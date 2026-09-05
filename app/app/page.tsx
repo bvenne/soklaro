@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Cloud, CloudRain, CloudSun, Droplets, Gauge, LocateFixed, MapPin, Menu, Navigation, RefreshCw, Search, Sun, Sunrise, Sunset, Wind, X } from 'lucide-react';
-import { OpenAuraMark } from '@/app/components/open-aura-mark';
+import { SoklaroMark } from '@/app/components/soklaro-mark';
 import { backgroundFor, interpretWmo } from '@/lib/weather/wmo';
 import { cacheForecast, clearLocalData, readCachedForecast, readLastPlace, saveLastPlace } from '@/lib/weather/cache';
 import { requestLocation, roundCoordinates, type GeolocationResult, type LocationPrecision } from '@/lib/weather/geolocation';
@@ -146,7 +146,7 @@ export default function WeatherApp() {
   const updated = forecast.current.time.slice(11, 16);
 
   if (!mounted) {
-    return <main className="weather-app app-boot" aria-busy="true"><div className="boot-mark" aria-hidden="true"><OpenAuraMark /></div><p>OpenAura lädt das Wetter …</p></main>;
+    return <main className="weather-app app-boot" aria-busy="true"><div className="boot-mark" aria-hidden="true"><SoklaroMark /></div><p>soklaro lädt das Wetter …</p></main>;
   }
 
   const choosePlace = (next: Place) => { saveLastPlace(next); setPlace(next); setSearchOpen(false); void load(next); };
@@ -160,7 +160,7 @@ export default function WeatherApp() {
   return (
     <main className="weather-app"><PwaRegister />
       <WeatherBackdrop forecast={forecast} /><div className="weather-overlay" aria-hidden="true" />
-      <header className="app-header"><a className="brand-mark" href="/" aria-label="OpenAura Startseite"><span><OpenAuraMark /></span>OpenAura</a><nav><IconButton label="Ort suchen" onClick={() => setSearchOpen(true)}><Search /></IconButton><IconButton label="Menü öffnen" onClick={() => setSettingsOpen(true)}><Menu /></IconButton></nav></header>
+      <header className="app-header"><a className="brand-mark" href="/" aria-label="soklaro Startseite"><span><SoklaroMark /></span>soklaro</a><nav><IconButton label="Ort suchen" onClick={() => setSearchOpen(true)}><Search /></IconButton><IconButton label="Menü öffnen" onClick={() => setSettingsOpen(true)}><Menu /></IconButton></nav></header>
       {(status === 'offline' || status === 'error') && <div className="status-banner" role="status">{status === 'offline' ? 'Offline – zuletzt gespeicherte oder Beispieldaten' : 'Live-Daten nicht erreichbar – Beispieldaten'}</div>}
       <section className="weather-hero" aria-labelledby="place-name">
         <div className="place-row"><div><p className="eyebrow">{place.name === 'Aktueller Standort' ? 'Aktueller Standort' : 'Dein Wetter'}</p><h1 id="place-name">{place.name}</h1><p>{time} · {condition.label}</p></div><IconButton label="Wetter aktualisieren" onClick={() => void load()}><RefreshCw className={status === 'loading' ? 'spinning' : ''} /></IconButton></div>
@@ -185,7 +185,7 @@ export default function WeatherApp() {
         </div>
         <div className="sun-card"><div><Sunrise aria-hidden="true" /><small>Sonnenaufgang</small><strong>{today.sunrise.slice(11, 16)}</strong></div><div className="sun-arc" aria-hidden="true"><span /></div><div><Sunset aria-hidden="true" /><small>Sonnenuntergang</small><strong>{today.sunset.slice(11, 16)}</strong></div></div>
         <section className="days"><div className="section-heading"><div><p className="eyebrow">Ausblick</p><h2>14 Tage</h2></div></div>{forecast.daily.map((day, index) => <article key={day.date}><time>{index === 0 ? 'Heute' : new Intl.DateTimeFormat('de', { weekday: 'short', day: '2-digit', month: '2-digit' }).format(new Date(`${day.date}T12:00:00`))}</time><span className="daily-condition" role="img" aria-label={interpretWmo(day.weatherCode).label}><WeatherIcon code={day.weatherCode} /><small>{interpretWmo(day.weatherCode).label}</small></span><span className="daily-metrics"><small title="Regenwahrscheinlichkeit"><CloudRain aria-hidden="true" />{day.precipitationProbability}%</small><small title="Erwartete Niederschlagsmenge"><Droplets aria-hidden="true" />{day.precipitationSum.toFixed(1)} mm</small><small title="Sonnenscheindauer"><Sun aria-hidden="true" />{(day.sunshineDuration / 3600).toFixed(1)} h</small></span><strong>{Math.round(day.temperatureMax)}° <em>{Math.round(day.temperatureMin)}°</em></strong></article>)}</section>
-        <footer className="app-footer"><p>Wetterdaten: <a href="https://open-meteo.com/" rel="noreferrer">Open‑Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="noreferrer">CC BY 4.0</a> · von OpenAura ausgewählt, formatiert und zu lokalen Hinweisen verarbeitet.</p><nav aria-label="Rechtliches"><a href="/privacy">Netzwerk & Datenschutz</a><a href="/impressum">Impressum</a></nav></footer>
+        <footer className="app-footer"><p>Wetterdaten: <a href="https://open-meteo.com/" rel="noreferrer">Open‑Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="noreferrer">CC BY 4.0</a> · von soklaro ausgewählt, formatiert und zu lokalen Hinweisen verarbeitet.</p><nav aria-label="Rechtliches"><a href="/privacy">Netzwerk & Datenschutz</a><a href="/impressum">Impressum</a></nav></footer>
       </section>
 
       {searchOpen && <SearchPanel onSelect={choosePlace} onClose={() => setSearchOpen(false)} />}

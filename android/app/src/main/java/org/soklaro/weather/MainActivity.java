@@ -1,4 +1,4 @@
-package org.openaura.weather;
+package org.soklaro.weather;
 
 import com.getcapacitor.BridgeActivity;
 

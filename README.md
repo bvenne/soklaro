@@ -1,10 +1,8 @@
-# OpenAura
+# soklaro
 
 Das Wetter für deinen Ort – nicht dein Standort für Werbenetzwerke.
 
-OpenAura ist eine freie, werbe- und trackerfreie Wetter-App für Web, PWA, iOS und Android. Sie nutzt standardmäßig Open‑Meteo, fragt den Gerätestandort erst nach einer bewussten Aktion ab und speichert Favoriten, Einstellungen sowie den letzten Forecast ausschließlich lokal.
-
-> **Wichtig:** Die dokumentierte Namensprüfung hat „OpenAura“ wegen bestehender Drittverwendungen nicht freigegeben. Der Name bleibt bis zur Umbenennung oder anwaltlichen Freigabe ein Arbeitstitel; siehe [docs/NAME_CLEARANCE.md](docs/NAME_CLEARANCE.md).
+soklaro ist eine freie, werbe- und trackerfreie Wetter-App für Web, PWA, iOS und Android. Sie nutzt standardmäßig Open‑Meteo, fragt den Gerätestandort erst nach einer bewussten Aktion ab und speichert Favoriten, Einstellungen sowie den letzten Forecast ausschließlich lokal.
 
 ## Lokal starten
 
@@ -57,7 +55,7 @@ Kanonische Domain und Quellcode-Repository werden über `NEXT_PUBLIC_SITE_URL` u
 
 ## Datenschutz
 
-OpenAura enthält keine Werbung, Analytics, Telemetrie, Tracking-Pixel, Session-Replays, Fingerprinting-, Crash-Reporting-, Social-Media- oder Marketing-SDKs. Für Online-Abfragen erhält der konfigurierte Anbieter technisch IP-Adresse und Suchbegriff beziehungsweise Koordinaten. Details: [PRIVACY.md](PRIVACY.md).
+soklaro enthält keine Werbung, Analytics, Telemetrie, Tracking-Pixel, Session-Replays, Fingerprinting-, Crash-Reporting-, Social-Media- oder Marketing-SDKs. Für Online-Abfragen erhält der konfigurierte Anbieter technisch IP-Adresse und Suchbegriff beziehungsweise Koordinaten. Details: [PRIVACY.md](PRIVACY.md).
 
 ## Lizenz
 

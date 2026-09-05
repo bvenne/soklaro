@@ -1,6 +1,6 @@
 # Datenschutz
 
-OpenAura ist werbe- und trackerfrei, aber eine Online-Wetterabfrage ist keine übertragungsfreie Nutzung.
+soklaro ist werbe- und trackerfrei, aber eine Online-Wetterabfrage ist keine übertragungsfreie Nutzung.
 
 ## Netzwerkzugriffe
 

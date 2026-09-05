@@ -1,4 +1,4 @@
-export function OpenAuraMark({ className }: { className?: string }) {
+export function SoklaroMark({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 32 32" fill="none" aria-hidden="true">
       <path d="M5.5 21.5h16.8a5.2 5.2 0 0 0 .2-10.4 7.3 7.3 0 0 0-13.6 2.7 4 4 0 0 0-3.4 7.7Z" fill="var(--logo-cloud-fill, transparent)" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />

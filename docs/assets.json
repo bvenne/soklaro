@@ -3,8 +3,8 @@
   "created": "2026-09-01",
   "runtimeRemoteLoads": false,
   "masters": [
-    { "file": "assets/source/master-day.png", "author": "OpenAura contributors using the OpenAI image generator", "license": "CC0-1.0", "edit": "responsive crops, condition-specific brightness/color/tint, optional blur/precipitation treatment", "dominant": "#7f9cb4" },
-    { "file": "assets/source/master-night.png", "author": "OpenAura contributors using the OpenAI image generator", "license": "CC0-1.0", "edit": "responsive crops, condition-specific brightness/color/tint, optional blur/precipitation treatment", "dominant": "#10263a" }
+    { "file": "assets/source/master-day.png", "author": "soklaro contributors using the OpenAI image generator", "license": "CC0-1.0", "edit": "responsive crops, condition-specific brightness/color/tint, optional blur/precipitation treatment", "dominant": "#7f9cb4" },
+    { "file": "assets/source/master-night.png", "author": "soklaro contributors using the OpenAI image generator", "license": "CC0-1.0", "edit": "responsive crops, condition-specific brightness/color/tint, optional blur/precipitation treatment", "dominant": "#10263a" }
   ],
   "variants": { "conditions": ["clear","mostly-clear","partly-cloudy","overcast","fog","drizzle","rain","showers","thunderstorm","snow","snow-showers","freezing","extreme","fallback"], "periods": ["day","night"], "widths": [640,1280,1920], "formats": ["avif","webp"], "placeholder": "dominant color from master metadata" }
 }

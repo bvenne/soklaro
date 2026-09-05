@@ -1,4 +1,4 @@
-"""Create responsive AVIF/WebP derivatives from OpenAura's generated masters."""
+"""Create responsive AVIF/WebP derivatives from soklaro's generated masters."""
 from pathlib import Path
 from PIL import Image, ImageEnhance, ImageFilter, ImageOps, ImageDraw
 

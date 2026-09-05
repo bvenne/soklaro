@@ -1,7 +1,7 @@
 import type { Place, WeatherForecast } from './types';
 
-const PREFIX = 'openaura:forecast:';
-const LAST_PLACE_KEY = 'openaura:last-place';
+const PREFIX = 'soklaro:forecast:';
+const LAST_PLACE_KEY = 'soklaro:last-place';
 export const MAX_CACHE_AGE = 6 * 60 * 60 * 1000;
 
 export function saveLastPlace(place: Place): void {

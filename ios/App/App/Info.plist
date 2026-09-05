@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>OpenAura</string>
+        <string>soklaro</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -25,7 +25,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>OpenAura nutzt deinen Standort nur nach deiner Aktion, um Wetterdaten für die gewählte Genauigkeit abzurufen.</string>
+	<string>soklaro nutzt deinen Standort nur nach deiner Aktion, um Wetterdaten für die gewählte Genauigkeit abzurufen.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

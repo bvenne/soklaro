@@ -11,4 +11,4 @@ Nutzeraktion
 Gerät ── lokal ──> Favoriten · Einstellungen · Locale · letzter Forecast
 ```
 
-Es existiert kein OpenAura-Anwendungsserver und kein Nutzerkonto. Ein Betreiber kann den Forecast-Endpunkt durch eine eigene HTTPS-Instanz ersetzen.
+Es existiert kein soklaro-Anwendungsserver und kein Nutzerkonto. Ein Betreiber kann den Forecast-Endpunkt durch eine eigene HTTPS-Instanz ersetzen.

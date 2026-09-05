@@ -1,4 +1,4 @@
-const CACHE = 'openaura-shell-v1';
+const CACHE = 'soklaro-shell-v1';
 const SHELL = ['/', '/app', '/privacy', '/manifest.webmanifest', '/icons/icon-192.svg', '/icons/icon-512.svg', '/weather/fallback-day-640.webp', '/weather/fallback-night-640.webp'];
 self.addEventListener('install', (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener('activate', (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim())));

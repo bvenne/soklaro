@@ -2,7 +2,7 @@
 
 ## Festgelegtes Standardmodell
 
-Der unveränderte OpenAura-Build ist werbe-, abo- und verkaufsfrei und nutzt die
+Der unveränderte soklaro-Build ist werbe-, abo- und verkaufsfrei und nutzt die
 öffentliche Open-Meteo-API im Modus **non-commercial**. Dabei gelten die
 Open-Meteo-Limits sowie deren Terms. Die Wetterdaten werden unter CC BY 4.0
 bezogen. Die App verlinkt Open-Meteo und die Lizenz direkt bei der Darstellung

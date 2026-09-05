@@ -38,7 +38,7 @@ const sections = [...packages.entries()].sort(([a], [b]) => a.localeCompare(b)).
 });
 
 const report = [
-  'OPENAURA – LIZENZEN DER PRODUKTIONSABHÄNGIGKEITEN',
+  'SOKLARO – LIZENZEN DER PRODUKTIONSABHÄNGIGKEITEN',
   '',
   'Automatisch aus package-lock.json und den installierten Paketen erzeugt.',
   `Enthaltene eindeutige Pakete: ${sections.length}`,

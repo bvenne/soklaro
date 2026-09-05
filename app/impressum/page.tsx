@@ -1,15 +1,15 @@
-import { OpenAuraMark } from '../components/open-aura-mark';
+import { SoklaroMark } from '../components/soklaro-mark';
 
 export const metadata = {
   title: 'Impressum',
-  description: 'Anbieter- und Kontaktangaben für OpenAura.',
+  description: 'Anbieter- und Kontaktangaben für soklaro.',
 };
 
 export default function ImprintPage() {
   return (
     <main className="privacy-page imprint-page">
       <header>
-        <a className="brand-mark" href="/" aria-label="OpenAura Startseite"><span><OpenAuraMark /></span>OpenAura</a>
+        <a className="brand-mark" href="/" aria-label="soklaro Startseite"><span><SoklaroMark /></span>soklaro</a>
         <nav><a href="/privacy">Datenschutz</a><a href="/app">Wetter öffnen</a></nav>
       </header>
       <p className="eyebrow">Rechtliche Angaben</p>
@@ -31,7 +31,7 @@ export default function ImprintPage() {
       <h2>Inhaltlich verantwortlich</h2>
       <p>[Name und ladungsfähige Anschrift ergänzen, soweit erforderlich]</p>
       <h2>Hinweis zum Projektstatus</h2>
-      <p>OpenAura befindet sich in Entwicklung. Der Projektname ist ein Arbeitstitel und keine geprüfte Marke. Diese Platzhalterseite ist noch kein veröffentlichungsfähiges Impressum.</p>
+      <p>soklaro befindet sich in Entwicklung. Vor der Veröffentlichung sind die Betreiberangaben vollständig einzutragen.</p>
     </main>
   );
 }

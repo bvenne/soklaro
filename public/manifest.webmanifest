@@ -1,6 +1,6 @@
 {
-  "name": "OpenAura – Wetter ohne Tracking",
-  "short_name": "OpenAura",
+  "name": "soklaro – Wetter ohne Tracking",
+  "short_name": "soklaro",
   "description": "Freie, werbe- und trackerfreie Wetter-App.",
   "start_url": "/app",
   "scope": "/",

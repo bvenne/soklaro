@@ -1,4 +1,4 @@
-# Lizenz der OpenAura-Wetterbilder
+# Lizenz der soklaro-Wetterbilder
 
 Die Dateien unter `assets/source/` und die daraus erzeugten Varianten unter
 `public/weather/` werden, soweit an ihnen Urheber- oder verwandte Rechte

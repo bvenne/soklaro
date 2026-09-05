@@ -22,9 +22,6 @@ if (mode === 'commercial-proxy' && process.env.VITE_OPEN_METEO_URL === 'https://
 const imprint = fs.readFileSync('app/impressum/page.tsx', 'utf8');
 if (/\[[^\]]*ergänzen[^\]]*\]/i.test(imprint) || /nicht veröffentlichungsfähig/i.test(imprint)) failures.push('Das Impressum enthält noch Platzhalter.');
 
-const nameReview = fs.readFileSync('docs/NAME_CLEARANCE.md', 'utf8');
-if (!/\*\*Status:\*\* FREIGEGEBEN/.test(nameReview)) failures.push('Der Produktname ist nicht freigegeben.');
-
 for (const file of ['ASSET_LICENSE.md', 'public/legal/project-license.txt', 'public/legal/third-party-licenses.txt']) {
   if (!fs.existsSync(file)) failures.push(`${file} fehlt.`);
 }

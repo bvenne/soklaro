@@ -1,12 +1,12 @@
 # Domain, Repository und App-ID
 
-OpenAura enthält keine erfundenen Produktionslinks mehr. Die kanonischen Werte
+soklaro enthält keine erfundenen Produktionslinks mehr. Die kanonischen Werte
 werden beim Release gesetzt:
 
 ```text
 NEXT_PUBLIC_SITE_URL=https://<eigene-domain>
 NEXT_PUBLIC_REPOSITORY_URL=https://<repository-host>/<konto>/<repository>
-OPENAURA_APP_ID=<reverse-dns-app-id>
+SOKLARO_APP_ID=<reverse-dns-app-id>
 ```
 
 Ohne Repository-Wert wird auf der Landingpage kein Quellcode-Link angezeigt.

@@ -9,4 +9,4 @@
 | Manipulierte API-Antwort | Netzwerk/Provider | HTTPS, Schema-Mapping, fehlende Werte und unbekannte Codes sicher behandeln | Öffentliche API bleibt Vertrauensgrenze |
 | Client-Secret | Fehlkonfiguration | Keine Geheimnisse im Client; `.env.example` enthält nur öffentliche Werte | Betreiber kann versehentlich eine öffentliche Variable missbrauchen |
 
-Nicht im Scope: kompromittiertes Betriebssystem, manipulierte Browser-Erweiterungen, Provider-Infrastruktur und App-Store-Telemetrie außerhalb der OpenAura-Binärdatei.
+Nicht im Scope: kompromittiertes Betriebssystem, manipulierte Browser-Erweiterungen, Provider-Infrastruktur und App-Store-Telemetrie außerhalb der soklaro-Binärdatei.

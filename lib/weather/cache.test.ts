@@ -25,8 +25,8 @@ describe('last selected place', () => {
   });
 
   it('discards malformed stored places', () => {
-    localStorage.setItem('openaura:last-place', JSON.stringify({ id: 'broken' }));
+    localStorage.setItem('soklaro:last-place', JSON.stringify({ id: 'broken' }));
     expect(readLastPlace()).toBeNull();
-    expect(localStorage.getItem('openaura:last-place')).toBeNull();
+    expect(localStorage.getItem('soklaro:last-place')).toBeNull();
   });
 });
