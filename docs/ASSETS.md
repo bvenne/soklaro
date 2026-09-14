@@ -12,5 +12,8 @@ soklaro lädt zur Laufzeit keine externen Bilder, Schriften oder Icon-CDNs.
   eigene SVG-/Rastergrafiken erstellt und fallen unter die MPL-2.0 des
   Anwendungscodes, solange keine gesonderte Markenlizenz erklärt wird.
 - Weather Icons und Lucide bleiben unter ihren jeweiligen Drittanbieterlizenzen.
+- Die Wortmarke verwendet die lokal ausgelieferte Schrift Outfit Medium von
+  Smartsheet Inc. unter der SIL Open Font License 1.1. Der Lizenztext liegt in
+  `public/fonts/OFL-Outfit.txt`; zur Laufzeit wird kein Font-Server kontaktiert.
 
 Die maschinenlesbare Herkunftsdokumentation steht in `docs/assets.json`.

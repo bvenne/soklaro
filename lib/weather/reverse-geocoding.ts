@@ -1,4 +1,5 @@
 import type { Coordinates, Place } from './types';
+import { preferredLocale } from '../i18n/config';
 
 type NominatimAddress = Partial<Record<
   'city' | 'town' | 'village' | 'municipality' | 'hamlet' | 'suburb' | 'county' | 'state' | 'country',
@@ -27,7 +28,7 @@ export async function reverseGeocode(coordinates: Coordinates, signal?: AbortSig
     lon: String(coordinates.longitude),
     zoom: '10',
     addressdetails: '1',
-    'accept-language': 'de',
+    'accept-language': preferredLocale(),
   }).toString();
   const response = await fetch(url, { headers: { Accept: 'application/json' }, signal });
   if (!response.ok) throw new Error(`Reverse geocoding failed with ${response.status}`);

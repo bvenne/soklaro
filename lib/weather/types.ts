@@ -9,6 +9,8 @@ export type Place = Coordinates & {
 };
 
 export type WeatherPoint = {
+  /** Sunshine in seconds for the hour starting at time; absent in older caches. */
+  sunshineDuration?: number;
   time: string;
   temperature: number;
   apparentTemperature: number;
@@ -46,6 +48,7 @@ export type WeatherForecast = {
   updatedAt: string;
   current: WeatherPoint;
   hourly: WeatherPoint[];
+  detailHourly?: WeatherPoint[];
   daily: DailyForecast[];
   source: 'live' | 'cache' | 'mock';
 };

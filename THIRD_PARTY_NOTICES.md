@@ -12,6 +12,13 @@ Weather Icons 2.0.12, Erik Flowers, über die einzeln importierbaren SVG-Kompone
 
 Lucide Icons, ISC License. Nur tatsächlich importierte SVG-Komponenten werden gebündelt.
 
+## Outfit
+
+Die soklaro-Wortmarke verwendet Outfit Medium. Copyright 2021 The Outfit Project Authors
+(https://github.com/Outfitio/Outfit-Fonts), lizenziert unter der SIL Open Font License 1.1.
+Die Schrift wird lokal ausgeliefert; der vollständige Lizenztext liegt unter
+`public/fonts/OFL-Outfit.txt`.
+
 ## soklaro Wetterbilder
 
 Originalbilder wurden mit dem integrierten OpenAI-Bildgenerator für dieses Repository erzeugt und lokal bearbeitet. Ausgangsbilder und Wettervarianten stehen unter CC0-1.0. Keine Remote-Quelle und kein Standortdatum wird zur Laufzeit für die Auswahl verwendet. Details: `ASSET_LICENSE.md`, `docs/ASSETS.md` und `docs/assets.json`.

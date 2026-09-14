@@ -1,4 +1,5 @@
 import type { GeocodingProvider, Place, WeatherForecast, WeatherPoint, WeatherProvider } from './types';
+import { preferredLocale } from '../i18n/config';
 
 declare const __OPEN_METEO_URL__: string;
 declare const __OPEN_METEO_GEOCODING_URL__: string;
@@ -7,7 +8,7 @@ const hourlyFields = [
   'temperature_2m', 'apparent_temperature', 'weather_code', 'is_day', 'precipitation',
   'precipitation_probability', 'relative_humidity_2m', 'cloud_cover', 'dew_point_2m',
   'wind_speed_10m', 'wind_direction_10m', 'wind_gusts_10m', 'surface_pressure',
-  'visibility', 'uv_index',
+  'visibility', 'uv_index', 'sunshine_duration',
 ].join(',');
 
 const dailyFields = [
@@ -48,20 +49,24 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
   async getForecast(place: Place, signal?: AbortSignal): Promise<WeatherForecast> {
     const params = new URLSearchParams({
       latitude: String(place.latitude), longitude: String(place.longitude), timezone: 'auto',
-      forecast_days: '14', forecast_hours: '48', models: 'best_match',
+      forecast_days: '15', models: 'best_match',
       current: currentFields, hourly: hourlyFields, daily: dailyFields,
     });
     const data = await fetchJson(`${this.base}/v1/forecast?${params}`, signal);
     const point = (index: number): WeatherPoint => ({
+      // The value at 10:00 describes 09:00–10:00. Fetch one extra endpoint.
+      sunshineDuration: typeof data.hourly.sunshine_duration?.[index + 1] === 'number'
+        ? Math.max(0, Math.min(3600, data.hourly.sunshine_duration[index + 1])) : undefined,
       time: data.hourly.time[index], temperature: numberAt(data.hourly.temperature_2m, index),
       apparentTemperature: numberAt(data.hourly.apparent_temperature, index), weatherCode: numberAt(data.hourly.weather_code, index),
-      isDay: Boolean(numberAt(data.hourly.is_day, index)), precipitation: numberAt(data.hourly.precipitation, index),
+      isDay: Boolean(numberAt(data.hourly.is_day, index)), precipitation: numberAt(data.hourly.precipitation, index + 1, NaN),
       precipitationProbability: numberAt(data.hourly.precipitation_probability, index), humidity: numberAt(data.hourly.relative_humidity_2m, index), dewPoint: numberAt(data.hourly.dew_point_2m, index),
       cloudCover: numberAt(data.hourly.cloud_cover, index), windSpeed: numberAt(data.hourly.wind_speed_10m, index),
       windDirection: numberAt(data.hourly.wind_direction_10m, index), windGusts: numberAt(data.hourly.wind_gusts_10m, index),
       pressure: numberAt(data.hourly.surface_pressure, index), visibility: numberAt(data.hourly.visibility, index), uvIndex: numberAt(data.hourly.uv_index, index),
     });
-    const currentIndex = Math.max(0, data.hourly.time.indexOf(data.current.time));
+    const currentHour = data.current.time.slice(0, 13) + ':00';
+    const currentIndex = Math.max(0, data.hourly.time.indexOf(currentHour));
     const current = { ...point(currentIndex), time: data.current.time,
       temperature: data.current.temperature_2m ?? point(currentIndex).temperature,
       apparentTemperature: data.current.apparent_temperature ?? point(currentIndex).apparentTemperature,
@@ -71,8 +76,14 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
     return {
       place, timezone: data.timezone, timezoneAbbreviation: data.timezone_abbreviation,
       updatedAt: new Date().toISOString(), current,
-      hourly: data.hourly.time.map((_: string, index: number) => point(index)),
-      daily: data.daily.time.map((date: string, index: number) => ({
+      hourly: data.hourly.time.slice(currentIndex, currentIndex + 48).map((_: string, index: number) => point(currentIndex + index)),
+      detailHourly: data.hourly.time.map((_: string, index: number) => ({ ...point(index),
+        temperature: numberAt(data.hourly.temperature_2m, index, NaN),
+        weatherCode: numberAt(data.hourly.weather_code, index, -1),
+        precipitationProbability: numberAt(data.hourly.precipitation_probability, index, NaN),
+        windSpeed: numberAt(data.hourly.wind_speed_10m, index, NaN),
+      })),
+      daily: data.daily.time.slice(0, 14).map((date: string, index: number) => ({
         date, weatherCode: numberAt(data.daily.weather_code, index), temperatureMax: numberAt(data.daily.temperature_2m_max, index),
         temperatureMin: numberAt(data.daily.temperature_2m_min, index), precipitationProbability: numberAt(data.daily.precipitation_probability_max, index),
         precipitationSum: numberAt(data.daily.precipitation_sum, index), sunshineDuration: numberAt(data.daily.sunshine_duration, index),
@@ -90,7 +101,7 @@ export class OpenMeteoGeocodingProvider implements GeocodingProvider {
   }
   async search(query: string, signal?: AbortSignal): Promise<Place[]> {
     if (query.trim().length < 2) return [];
-    const params = new URLSearchParams({ name: query.trim(), count: '8', language: 'de', format: 'json' });
+    const params = new URLSearchParams({ name: query.trim(), count: '8', language: preferredLocale(), format: 'json' });
     const data = await fetchJson(`${this.base}/v1/search?${params}`, signal);
     return (data.results ?? []).map((item: any) => ({
       id: String(item.id), name: item.name, admin: item.admin1, country: item.country,
