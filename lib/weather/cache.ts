@@ -1,9 +1,11 @@
 import type { Place, WeatherForecast } from './types';
+import type { LocationPrecision } from './geolocation';
 
 const PREFIX = 'soklaro:forecast:';
 const LAST_PLACE_KEY = 'soklaro:last-place';
 const SAVED_PLACES_KEY = 'soklaro:saved-places';
 const GEOLOCATION_DEFAULT_KEY = 'soklaro:geolocation-default';
+const LOCATION_PRECISION_KEY = 'soklaro:location-precision';
 const MAX_SAVED_PLACES = 8;
 export const MAX_CACHE_AGE = 6 * 60 * 60 * 1000;
 
@@ -73,6 +75,20 @@ export function setGeolocationDefault(enabled: boolean): void {
 
 export function readGeolocationDefault(): boolean {
   return typeof localStorage !== 'undefined' && localStorage.getItem(GEOLOCATION_DEFAULT_KEY) === 'true';
+}
+
+export function setLocationPrecisionDefault(precision: LocationPrecision | null): void {
+  if (typeof localStorage === 'undefined') return;
+  if (precision === null) localStorage.removeItem(LOCATION_PRECISION_KEY);
+  else localStorage.setItem(LOCATION_PRECISION_KEY, precision);
+}
+
+export function readLocationPrecisionDefault(): LocationPrecision {
+  if (typeof localStorage === 'undefined') return 'private';
+  const precision = localStorage.getItem(LOCATION_PRECISION_KEY);
+  return precision === 'exact' || precision === 'approximate' || precision === 'private'
+    ? precision
+    : 'private';
 }
 
 export function cacheForecast(forecast: WeatherForecast): void {

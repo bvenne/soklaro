@@ -14,18 +14,17 @@ export default function ImprintPage() {
       </header>
       <p className="eyebrow">{t("Rechtliche Angaben")}</p>
       <h1>{t("Impressum")}</h1>
-      <aside className="legal-placeholder" role="note"> {t("Vor einer öffentlichen Veröffentlichung müssen die folgenden Platzhalter durch vollständige Betreiberangaben ersetzt und rechtlich geprüft werden.")} </aside>
       <h2>{t("Anbieter")}</h2>
       <address>
-        <strong>{t("[Name oder Firma ergänzen]")}</strong><br /> {t("[Straße und Hausnummer ergänzen]")}<br /> {t("[Postleitzahl und Ort ergänzen]")}<br /> {t("[Land ergänzen]")} </address>
+        <strong>{t("Bastian Vennemann")}</strong><br /> {t("Lerchenstr. 104 ")}<br /> {t("25462 Rellingen ")}<br /> {t("Germany")} </address>
       <h2>{t("Kontakt")}</h2>
-      <p>{t("E-Mail:")} <strong>{t("[E-Mail-Adresse ergänzen]")}</strong><br />{t("Telefon: [falls erforderlich ergänzen]")}</p>
-      <h2>{t("Vertretung und Register")}</h2>
-      <p>{t("Vertretungsberechtigte Person, Registergericht, Registernummer sowie Umsatzsteuer-ID sind – soweit auf den Betreiber zutreffend – vor Veröffentlichung zu ergänzen.")}</p>
+      <p>{t("E-Mail:")} <strong>{t("contact@soklaro.com")}</strong><br /></p>
       <h2>{t("Inhaltlich verantwortlich")}</h2>
-      <p>{t("[Name und ladungsfähige Anschrift ergänzen, soweit erforderlich]")}</p>
+            <address>
+        <strong>{t("Bastian Vennemann")}</strong><br /> {t("Lerchenstr. 104 ")}<br /> {t("25462 Rellingen ")}<br /> {t("Germany")} </address>
+
       <h2>{t("Hinweis zum Projektstatus")}</h2>
-      <p>{t("soklaro befindet sich in Entwicklung. Vor der Veröffentlichung sind die Betreiberangaben vollständig einzutragen.")}</p>
+      <p>{t("soklaro befindet sich noch in der Entwicklung. ")}</p>
     </main>
   );
 }

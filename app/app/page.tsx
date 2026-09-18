@@ -2,16 +2,17 @@
 import { useLocale } from '@/lib/i18n/use-locale';
 
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
-import { ArrowLeft, ChevronDown, CloudSunRain, Cloud, CloudRain, CloudSun, Droplets, Gauge, LocateFixed, MapPin, Menu, Navigation, RefreshCw, Search, Sun, Sunrise, Sunset, Wind, X } from 'lucide-react';
+import { ArrowLeft, ChevronDown, CloudSunRain, Cloud, CloudRain, CloudSun, Droplets, Gauge, LocateFixed, MapPin, Menu, RefreshCw, Search, Sun, Sunrise, Sunset, Wind, X } from 'lucide-react';
 import { SoklaroMark } from '@/app/components/soklaro-mark';
-import { backgroundFor, interpretWmo } from '@/lib/weather/wmo';
-import { cacheForecast, clearLocalData, forgetPlace, readCachedForecast, readGeolocationDefault, readLastPlace, readSavedPlaces, rememberPlace, saveLastPlace, setGeolocationDefault } from '@/lib/weather/cache';
+import { ThemeColor } from '@/app/components/theme-color';
+import { backgroundFor, interpretWmo, statusBarColorFor } from '@/lib/weather/wmo';
+import { cacheForecast, clearLocalData, forgetPlace, readCachedForecast, readGeolocationDefault, readLastPlace, readLocationPrecisionDefault, readSavedPlaces, rememberPlace, saveLastPlace, setGeolocationDefault, setLocationPrecisionDefault } from '@/lib/weather/cache';
 import { requestLocation, roundCoordinates, type GeolocationResult, type LocationPrecision } from '@/lib/weather/geolocation';
 import { daySummary, sunProgress } from '@/lib/weather/day-summary';
 import { hourSummary } from '@/lib/weather/hour-summary';
 import { periodSummaries } from '@/lib/weather/period-summary';
 import { deriveInsight } from '@/lib/weather/insights';
-import { berlin, mockForecast } from '@/lib/weather/mock';
+import { hamburg, mockForecast } from '@/lib/weather/mock';
 import { OpenMeteoGeocodingProvider, OpenMeteoWeatherProvider } from '@/lib/weather/open-meteo';
 import { reverseGeocode } from '@/lib/weather/reverse-geocoding';
 import type { Place, WeatherForecast } from '@/lib/weather/types';
@@ -109,7 +110,7 @@ export default function WeatherApp() {
   const { t, locale, number, setLanguage, preference } = useLocale();
   const [mounted, setMounted] = useState(false);
   const [clock, setClock] = useState<Date | null>(null);
-  const [place, setPlace] = useState<Place>(berlin);
+  const [place, setPlace] = useState<Place>(hamburg);
   const [forecast, setForecast] = useState<WeatherForecast>(() => mockForecast());
   const [searchOpen, setSearchOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -141,16 +142,17 @@ export default function WeatherApp() {
     void load(next);
   };
 
-  const locate = async (makeDefault = false): Promise<boolean> => {
+  const locate = async (makeDefault = false, requestedPrecision = precision): Promise<boolean> => {
     setLocationStatus(null);
     const result = await requestLocation();
     setLocationStatus(result.status);
     if (result.status !== 'allowed') return false;
     if (makeDefault) {
       setGeolocationDefault(true);
+      setLocationPrecisionDefault(requestedPrecision);
       setGeolocationDefaultState(true);
     }
-    const coordinates = roundCoordinates(result.coordinates, precision);
+    const coordinates = roundCoordinates(result.coordinates, requestedPrecision);
     let namedPlace: Pick<Place, 'name' | 'admin' | 'country'> = { name: t("Dein Standort") };
     try {
       namedPlace = await reverseGeocode(coordinates) ?? namedPlace;
@@ -169,8 +171,9 @@ export default function WeatherApp() {
 
   const disableGeolocation = () => {
     setGeolocationDefault(false);
+    setLocationPrecisionDefault(null);
     setGeolocationDefaultState(false);
-    if (place.id.startsWith('geo:')) choosePlace(savedPlaces.find((saved) => !saved.id.startsWith('geo:')) ?? berlin);
+    if (place.id.startsWith('geo:')) choosePlace(savedPlaces.find((saved) => !saved.id.startsWith('geo:')) ?? hamburg);
   };
 
   const removePlace = (placeId: string) => {
@@ -178,10 +181,11 @@ export default function WeatherApp() {
     setSavedPlaces(remaining);
     if (placeId.startsWith('geo:')) {
       setGeolocationDefault(false);
+      setLocationPrecisionDefault(null);
       setGeolocationDefaultState(false);
     }
     if (placeId !== place.id) return;
-    const next = remaining[0] ?? berlin;
+    const next = remaining[0] ?? hamburg;
     saveLastPlace(next);
     setPlace(next);
     void load(next);
@@ -191,19 +195,21 @@ export default function WeatherApp() {
     setMounted(true);
     setClock(new Date());
     const clockInterval = window.setInterval(() => setClock(new Date()), 60_000);
-    const initialPlace = readLastPlace() ?? berlin;
+    const initialPlace = readLastPlace() ?? hamburg;
     const storedPlaces = readSavedPlaces();
     const places = storedPlaces.some((saved) => saved.id === initialPlace.id)
       ? storedPlaces
       : rememberPlace(initialPlace);
     const useGeolocation = readGeolocationDefault();
+    const storedPrecision = useGeolocation ? readLocationPrecisionDefault() : 'private';
     const cached = readCachedForecast(initialPlace.id);
     setPlace(initialPlace);
     setSavedPlaces(places);
     setGeolocationDefaultState(useGeolocation);
+    setPrecision(storedPrecision);
     if (cached) setForecast(cached.forecast);
     if (useGeolocation) {
-      void locateOnStartup().then((located) => { if (!located) void load(initialPlace); });
+      void locateOnStartup(false, storedPrecision).then((located) => { if (!located) void load(initialPlace); });
     } else void load(initialPlace);
     return () => {
       window.clearInterval(clockInterval);
@@ -224,7 +230,7 @@ export default function WeatherApp() {
   }
 
   return (
-    <main className="weather-app"><PwaRegister />
+    <main className="weather-app"><PwaRegister /><ThemeColor color={statusBarColorFor(forecast.current.weatherCode, forecast.current.isDay)} />
       <WeatherBackdrop forecast={forecast} /><div className="weather-overlay" aria-hidden="true" />
       <header className="app-header"><a className="brand-mark" href="/" aria-label={t("soklaro Startseite")}><span><SoklaroMark /></span>soklaro</a><nav><IconButton label={t("Ort suchen")} onClick={() => setSearchOpen(true)}><Search /></IconButton><IconButton label={t("Menü öffnen")} onClick={() => setSettingsOpen(true)}><Menu /></IconButton></nav></header>
       {(status === 'offline' || status === 'error') && <div className="status-banner" role="status">{status === 'offline' ? t("Offline – zuletzt gespeicherte oder Beispieldaten") : t("Live-Daten nicht erreichbar – Beispieldaten")}</div>}
@@ -281,11 +287,11 @@ export default function WeatherApp() {
             </details>;
           })}
         </section>
-        <footer className="app-footer"><p>{t("Wetterdaten:")} <a href="https://open-meteo.com/" rel="noreferrer">Open‑Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="noreferrer">CC BY 4.0</a> {t("· Ortsnamen bei GPS-Nutzung: ©")} <a href="https://www.openstreetmap.org/copyright" rel="noreferrer">{t("OpenStreetMap-Mitwirkende")}</a>.</p><nav aria-label={t("Rechtliches")}><a href="/privacy">{t("Netzwerk & Datenschutz")}</a><a href="/impressum">{t("Impressum")}</a></nav></footer>
+        <footer className="app-footer"><p>{t("Wetterdaten:")} <a href="https://open-meteo.com/" rel="noreferrer">Open‑Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="noreferrer">CC BY 4.0</a> {t("· Ortsnamen bei GPS-Nutzung: ©")} <a href="https://www.openstreetmap.org/copyright" rel="noreferrer">{t("OpenStreetMap-Mitwirkende")}</a>.</p><nav aria-label={t("Rechtliches")}><a href="/privacy">{t("Datenschutz")}</a><a href="/impressum">{t("Impressum")}</a></nav></footer>
       </section>
 
       {searchOpen && <SearchPanel onSelect={choosePlace} onClose={() => setSearchOpen(false)} />}
-      {settingsOpen && <div className="drawer-backdrop" onClick={() => setSettingsOpen(false)}><aside className="settings-drawer" aria-label={t("Einstellungen")} onClick={(event) => event.stopPropagation()}><div className="drawer-title"><h2>{t("Privat. Von Anfang an.")}</h2><IconButton label={t("Menü schließen")} onClick={() => setSettingsOpen(false)}><X /></IconButton></div><label className="language-setting"><span>{t("Sprache")}</span><select value={preference} onChange={(event) => setLanguage(event.target.value)}><option value="auto">{t("Automatisch (Browser)")}</option><option value="de">Deutsch</option><option value="en">English</option></select></label><p>{t("Standortzugriff erfolgt nur nach deiner Aktion. Die gewählten oder gerundeten Koordinaten gehen an Open‑Meteo und zur einmaligen Ortsbenennung an OpenStreetMap.")}</p><div className="location-default"><input id="geolocation-default" type="checkbox" aria-describedby="geolocation-default-help" checked={geolocationDefault} onChange={(event) => { if (event.target.checked) void locate(true); else disableGeolocation(); }} /><label htmlFor="geolocation-default"><strong>{t("GPS-Standort als Standard")}</strong><small id="geolocation-default-help">{t("Nach Aktivierung wird der Standort bei künftigen Starts automatisch aktualisiert.")}</small></label></div><fieldset><legend>{t("Koordinatengenauigkeit")}</legend>{(['exact', 'approximate', 'private'] as const).map((item) => <label key={item}><input type="radio" name="precision" value={item} checked={precision === item} onChange={() => setPrecision(item)} /><span><strong>{item === 'exact' ? t("Exakt") : item === 'approximate' ? t("Ungefähr · ca. 1 km") : t("Privat · ca. 5 km")}</strong>{item === 'private' && <small>{t("Kann an Küsten und in Bergen die Prognose beeinflussen.")}</small>}</span></label>)}</fieldset><button className="primary-button" onClick={() => void locate(!geolocationDefault)}><LocateFixed />{geolocationDefault ? t("Standort aktualisieren") : t("Meinen Standort verwenden")}</button>{locationStatus && locationStatus !== 'allowed' && <p role="status">{t("Standortstatus:")} {t({ denied: "Zugriff verweigert", blocked: "Zugriff blockiert", unavailable: "Nicht verfügbar", timeout: "Zeitüberschreitung", inaccurate: "Standort zu ungenau" }[locationStatus])}</p>}{savedPlaces.length > 0 && <section className="saved-places-settings" aria-labelledby="saved-places-title"><h3 id="saved-places-title">{t("Gespeicherte Orte")}</h3>{savedPlaces.map((saved) => <div key={saved.id}><button className="saved-place-name" onClick={() => { choosePlace(saved); setSettingsOpen(false); }}>{saved.id.startsWith('geo:') ? <LocateFixed aria-hidden="true" /> : <MapPin aria-hidden="true" />}<span>{saved.name}</span></button><button className="remove-place" aria-label={t('{{name}} entfernen', { name: saved.name })} onClick={() => removePlace(saved.id)}><X aria-hidden="true" /></button></div>)}</section>}<a className="secondary-link" href="/privacy"><Navigation />{t("Netzwerk & Datenschutz")}</a><button className="danger-button" onClick={() => { clearLocalData(); setLanguage('auto'); setSavedPlaces([]); setGeolocationDefaultState(false); setLocationStatus(null); setPlace(berlin); void load(berlin); setSettingsOpen(false); }}>{t("Alle lokalen Daten löschen")}</button></aside></div>}
+      {settingsOpen && <div className="drawer-backdrop" onClick={() => setSettingsOpen(false)}><aside className="settings-drawer" aria-label={t("Einstellungen")} onClick={(event) => event.stopPropagation()}><div className="drawer-title"><h2>{t("Einstellungen")}</h2><IconButton label={t("Menü schließen")} onClick={() => setSettingsOpen(false)}><X /></IconButton></div><label className="language-setting"><span>{t("Sprache")}</span><select value={preference} onChange={(event) => setLanguage(event.target.value)}><option value="auto">{t("Automatisch (Browser)")}</option><option value="de">Deutsch</option><option value="en">English</option></select></label>{savedPlaces.length > 0 && <section className="saved-places-settings" aria-labelledby="saved-places-title"><h3 id="saved-places-title">{t("Gespeicherte Orte")}</h3>{savedPlaces.map((saved) => <div key={saved.id}><button className="saved-place-name" onClick={() => { choosePlace(saved); setSettingsOpen(false); }}>{saved.id.startsWith('geo:') ? <LocateFixed aria-hidden="true" /> : <MapPin aria-hidden="true" />}<span>{saved.name}</span></button><button className="remove-place" aria-label={t('{{name}} entfernen', { name: saved.name })} onClick={() => removePlace(saved.id)}><X aria-hidden="true" /></button></div>)}</section>}<p>{t("Standortzugriff erfolgt nur nach deiner Aktion. Die gewählten oder gerundeten Koordinaten gehen an Open‑Meteo und zur einmaligen Ortsbenennung an OpenStreetMap.")}</p><div className="location-default"><input id="geolocation-default" type="checkbox" aria-describedby="geolocation-default-help" checked={geolocationDefault} onChange={(event) => { if (event.target.checked) void locate(true); else disableGeolocation(); }} /><label htmlFor="geolocation-default"><strong>{t("GPS-Standort als Standard")}</strong><small id="geolocation-default-help">{t("Nach Aktivierung wird der Standort bei künftigen Starts automatisch aktualisiert.")}</small></label></div><fieldset><legend>{t("Koordinatengenauigkeit")}</legend>{(['exact', 'approximate', 'private'] as const).map((item) => <label key={item}><input type="radio" name="precision" value={item} checked={precision === item} onChange={() => { setPrecision(item); if (geolocationDefault) setLocationPrecisionDefault(item); }} /><span><strong>{item === 'exact' ? t("Exakt") : item === 'approximate' ? t("Ungefähr · ca. 1 km") : t("Privat · ca. 5 km")}</strong>{item === 'private' && <small>{t("Kann an Küsten und in Bergen die Prognose beeinflussen.")}</small>}</span></label>)}</fieldset><button className="primary-button" onClick={() => void locate(!geolocationDefault)}><LocateFixed />{geolocationDefault ? t("Standort aktualisieren") : t("Meinen Standort verwenden")}</button>{locationStatus && locationStatus !== 'allowed' && <p role="status">{t("Standortstatus:")} {t({ denied: "Zugriff verweigert", blocked: "Zugriff blockiert", unavailable: "Nicht verfügbar", timeout: "Zeitüberschreitung", inaccurate: "Standort zu ungenau" }[locationStatus])}</p>}<a className="secondary-link" href="/privacy">{t("Netzwerk & Datenschutz")}</a><button className="danger-button" onClick={() => { clearLocalData(); setLanguage('auto'); setSavedPlaces([]); setGeolocationDefaultState(false); setLocationStatus(null); setPrecision('private'); setPlace(hamburg); void load(hamburg); setSettingsOpen(false); }}>{t("Alle lokalen Daten löschen")}</button></aside></div>}
     </main>
   );
 }

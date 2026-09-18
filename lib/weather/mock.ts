@@ -1,8 +1,9 @@
 import type { Place, WeatherForecast, WeatherPoint } from './types';
 
 export const berlin: Place = { id: '2950159', name: 'Berlin', country: 'Deutschland', latitude: 52.52, longitude: 13.405, timezone: 'Europe/Berlin' };
+export const hamburg: Place = { id: '2911298', name: 'Hamburg', country: 'Deutschland', latitude: 53.5511, longitude: 9.9937, timezone: 'Europe/Berlin' };
 
-export function mockForecast(place: Place = berlin): WeatherForecast {
+export function mockForecast(place: Place = hamburg): WeatherForecast {
   const start = new Date('2026-09-01T12:00:00Z');
   const hourly: WeatherPoint[] = Array.from({ length: 48 }, (_, index) => {
     const time = new Date(start.getTime() + index * 3_600_000);

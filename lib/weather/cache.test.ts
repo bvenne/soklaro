@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { forgetPlace, readGeolocationDefault, readLastPlace, readSavedPlaces, rememberPlace, saveLastPlace, setGeolocationDefault } from './cache';
+import { forgetPlace, readGeolocationDefault, readLastPlace, readLocationPrecisionDefault, readSavedPlaces, rememberPlace, saveLastPlace, setGeolocationDefault, setLocationPrecisionDefault } from './cache';
 import { berlin } from './mock';
 
 describe('last selected place', () => {
@@ -52,5 +52,20 @@ describe('last selected place', () => {
     expect(readGeolocationDefault()).toBe(true);
     setGeolocationDefault(false);
     expect(readGeolocationDefault()).toBe(false);
+  });
+
+  it('persists a valid default geolocation precision and can forget it', () => {
+    expect(readLocationPrecisionDefault()).toBe('private');
+    setLocationPrecisionDefault('exact');
+    expect(readLocationPrecisionDefault()).toBe('exact');
+    setLocationPrecisionDefault('approximate');
+    expect(readLocationPrecisionDefault()).toBe('approximate');
+    setLocationPrecisionDefault(null);
+    expect(readLocationPrecisionDefault()).toBe('private');
+  });
+
+  it('falls back safely for an invalid stored precision', () => {
+    localStorage.setItem('soklaro:location-precision', 'street-level');
+    expect(readLocationPrecisionDefault()).toBe('private');
   });
 });

@@ -50,3 +50,26 @@ export function backgroundFor(code: number, isDay: boolean): string {
   const { kind } = interpretWmo(code);
   return `/weather/${kind}-${isDay ? 'day' : 'night'}-1280.webp`;
 }
+
+const statusBarColors: Record<WeatherKind, [day: string, night: string]> = {
+  clear: ['#4a5661', '#121b24'],
+  'mostly-clear': ['#424c55', '#111921'],
+  'partly-cloudy': ['#3c444d', '#11171e'],
+  overcast: ['#2f3438', '#111519'],
+  fog: ['#54585b', '#2c3032'],
+  drizzle: ['#2e353a', '#10151a'],
+  rain: ['#22292f', '#0c1117'],
+  showers: ['#242d34', '#0b1219'],
+  thunderstorm: ['#14191f', '#070b10'],
+  snow: ['#595d61', '#2f3235'],
+  'snow-showers': ['#4d5357', '#272c2f'],
+  freezing: ['#3a4248', '#181e24'],
+  extreme: ['#17171e', '#0a0a10'],
+  fallback: ['#33373a', '#131619'],
+};
+
+/** Matches Safari's top UI to the darkened upper edge of the active backdrop. */
+export function statusBarColorFor(code: number, isDay: boolean): string {
+  const colors = statusBarColors[interpretWmo(code).kind];
+  return colors[isDay ? 0 : 1];
+}
