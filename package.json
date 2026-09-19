@@ -40,8 +40,8 @@
     "@capacitor/android": "8.5.1",
     "@capacitor/cli": "8.5.1",
     "@capacitor/ios": "8.5.1",
-    "@cloudflare/vite-plugin": "1.54.3",
-    "@cloudflare/workers-types": "5.20260902.1",
+    "@cloudflare/vite-plugin": "1.56.0",
+    "@cloudflare/workers-types": "5.20260919.1",
     "@openai/sites-vite-plugin": "0.2.0",
     "@playwright/test": "1.58.2",
     "@tailwindcss/postcss": "4.2.1",
@@ -58,12 +58,16 @@
     "typescript": "5.9.3",
     "vite": "8.2.2",
     "vitest": "4.1.11",
-    "wrangler": "4.128.0"
+    "wrangler": "4.135.0"
   },
   "overrides": {
     "xcode": {
       "uuid": "11.1.1"
     }
   },
-  "type": "module"
+  "type": "module",
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "workerd@1.20260918.1": true
+  }
 }
