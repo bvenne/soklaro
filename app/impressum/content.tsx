@@ -19,6 +19,7 @@ export default function ImprintPage() {
         <strong>{t("Bastian Vennemann")}</strong><br /> {t("Lerchenstr. 104 ")}<br /> {t("25462 Rellingen ")}<br /> {t("Germany")} </address>
       <h2>{t("Kontakt")}</h2>
       <p>{t("E-Mail:")} <strong>{t("contact@soklaro.com")}</strong><br /></p>
+      <p>{t("Telefon:")} <strong>{t("+49 156 796 729 03")}</strong><br /></p>
       <h2>{t("Inhaltlich verantwortlich")}</h2>
             <address>
         <strong>{t("Bastian Vennemann")}</strong><br /> {t("Lerchenstr. 104 ")}<br /> {t("25462 Rellingen ")}<br /> {t("Germany")} </address>
