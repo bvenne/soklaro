@@ -1,5 +1,25 @@
 # Drittanbieterhinweise
 
+## Regenradar: Leaflet, DWD und OpenStreetMap
+
+Leaflet (BSD-2-Clause), Copyright © Vladimir Agafonkin und Mitwirkende, wird lokal
+gebündelt und erst beim Öffnen des Radars geladen. Lizenztext siehe
+`public/legal/third-party-licenses.txt`.
+
+RV-Radarbeobachtungen und -vorhersagen (WMS `dwd:Niederschlagsradar`): © Deutscher Wetterdienst, CC BY 4.0.
+Quelle: https://maps.dwd.de/geoserver/ows .
+Nutzungsbedingungen: https://www.dwd.de/DE/service/copyright/copyright_node.html .
+Die Darstellung wird auf einen Kartenausschnitt projiziert und transparent überlagert.
+Die Farben und Werte stammen vom DWD; die Legende wird vom selben Dienst geladen.
+
+Karte: © OpenStreetMap-Mitwirkende, ODbL, https://www.openstreetmap.org/copyright .
+Für den öffentlichen Kacheldienst gelten zusätzlich
+https://operations.osmfoundation.org/policies/tiles/ .
+Nur sichtbare Kartenkacheln werden angefordert; keine Offline-Downloads oder
+Vorababrufe. Der Browser beachtet HTTP-Caching und sendet den Seiten-Referer.
+Der öffentliche Dienst bietet keine Verfügbarkeitsgarantie; bei größerem
+Verkehr ist ein eigener oder vertraglicher Kacheldienst erforderlich.
+
 ## Open‑Meteo
 
 Wetter- und Geocoding-Daten: Open‑Meteo, Datenattribution CC BY 4.0. Die App verlinkt Quelle und Lizenz bei der Datendarstellung und kennzeichnet ihre Auswahl, Formatierung und lokal abgeleiteten Hinweise als Bearbeitung. Nutzungsmodell und Quellen: `docs/OPEN_METEO_USAGE.md`.

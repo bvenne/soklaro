@@ -31,7 +31,7 @@ const sections = [...packages.entries()].sort(([a], [b]) => a.localeCompare(b)).
     : item.manifest.repository?.url;
   const origin = item.manifest.homepage ?? repository ?? 'nicht angegeben';
   const texts = item.licenseFiles.map((name) => {
-    const text = fs.readFileSync(path.join(item.packageDir, name), 'utf8').trim();
+    const text = fs.readFileSync(path.join(item.packageDir, name), 'utf8').replace(/\r\n/g, '\n').replace(/[\t ]+$/gm, '').trim();
     return `--- ${name} ---\n${text}`;
   }).join('\n\n') || `Das veröffentlichte npm-Paket enthält keine separate Lizenzdatei.\nDeklarierte SPDX-Lizenz: ${item.manifest.license}\nLizenztext und Copyright-Hinweise sind über die oben angegebene Paketquelle zu prüfen.`;
   return `${'='.repeat(78)}\n${key}\nLizenz: ${item.manifest.license}\nQuelle: ${origin}\n${'='.repeat(78)}\n\n${texts}`;

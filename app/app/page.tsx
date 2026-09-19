@@ -1,7 +1,8 @@
 'use client';
 import { useLocale } from '@/lib/i18n/use-locale';
 
-import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useEffectEvent, useRef, useState } from 'react';
+import { Radar } from 'lucide-react';
 import { ArrowLeft, ChevronDown, CloudSunRain, Cloud, CloudRain, CloudSun, Droplets, Gauge, LocateFixed, MapPin, Menu, RefreshCw, Search, Sun, Sunrise, Sunset, Wind, X } from 'lucide-react';
 import { SoklaroMark } from '@/app/components/soklaro-mark';
 import { ThemeColor } from '@/app/components/theme-color';
@@ -20,6 +21,7 @@ import { PwaRegister } from './pwa-register';
 import { WiCloudy, WiDayCloudy, WiDaySunny, WiDaySunnyOvercast, WiFog, WiNa, WiNightClear, WiNightCloudy, WiNightFog, WiNightPartlyCloudy, WiNightRain, WiNightShowers, WiNightSnow, WiNightSprinkle, WiNightThunderstorm, WiRain, WiShowers, WiSleet, WiSnow, WiSprinkle, WiStormShowers, WiThunderstorm } from 'react-icons/wi';
 
 const weatherProvider = new OpenMeteoWeatherProvider();
+const RainRadar = lazy(() => import('@/app/components/rain-radar'));
 const geocodingProvider = new OpenMeteoGeocodingProvider();
 
 function localIsoMinute(date: Date, timeZone: string): string {
@@ -113,6 +115,7 @@ export default function WeatherApp() {
   const [place, setPlace] = useState<Place>(hamburg);
   const [forecast, setForecast] = useState<WeatherForecast>(() => mockForecast());
   const [searchOpen, setSearchOpen] = useState(false);
+  const [radarOpen, setRadarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savedPlaces, setSavedPlaces] = useState<Place[]>([]);
   const [geolocationDefault, setGeolocationDefaultState] = useState(false);
@@ -239,10 +242,11 @@ export default function WeatherApp() {
         {savedPlaces.length > 1 && <nav className="place-switcher" aria-label={t("Gespeicherte Orte")} onTouchStart={(event) => event.stopPropagation()} onTouchEnd={(event) => event.stopPropagation()}>{savedPlaces.map((saved) => <button key={saved.id} aria-current={saved.id === place.id ? 'location' : undefined} onClick={() => choosePlace(saved)}>{saved.id.startsWith('geo:') ? <LocateFixed aria-hidden="true" /> : <MapPin aria-hidden="true" />}{saved.name}</button>)}</nav>}
         <div className="temperature" aria-label={t('{{temperature}} Grad Celsius', { temperature: number(forecast.current.temperature) })}><span>{Math.round(forecast.current.temperature)}</span><sup>°</sup></div>
         <p className="feels">{t("Gefühlt")} {Math.round(forecast.current.apparentTemperature)}{t("° · H")} {Math.round(today.temperatureMax)}{t("° / T")} {Math.round(today.temperatureMin)}°</p>
-        <div className="insight">{insight.startsWith('Regen wahrscheinlich') ? <CloudRain aria-hidden="true" /> : <CloudSun aria-hidden="true" />}<strong>{t(insight)}</strong></div>
+        <div className="insight-actions"><div className="insight">{insight.startsWith('Regen wahrscheinlich') ? <CloudRain aria-hidden="true" /> : <CloudSun aria-hidden="true" />}<strong>{t(insight)}</strong></div><button className="radar-trigger" aria-label={t('Regenradar öffnen')} title={t('Regenradar öffnen')} aria-haspopup="dialog" onClick={() => setRadarOpen(true)}><Radar aria-hidden="true" /></button></div>
         <p className="updated">{t("Aktualisiert")} {updated} · {forecast.source === 'live' ? t("Open‑Meteo Live-Daten") : forecast.source === 'cache' ? t("gespeicherte Daten") : t("Beispieldaten")}</p>
       </section>
 
+      {radarOpen && <Suspense fallback={<p role="status">{t('Radar wird geöffnet …')}</p>}><RainRadar place={place} onClose={() => setRadarOpen(false)} /></Suspense>}
       <section className="forecast-content">
         <div className="section-heading"><div><p className="eyebrow">{t("Nächste Stunden")}</p><h2>{t("Der Tag im Blick")}</h2></div><p>{t("48 Stunden")}</p></div>
         <div className="hourly" tabIndex={0} aria-label={t("Horizontale 48-Stunden-Prognose")}>

@@ -24,16 +24,17 @@
     "build:ios": "npm run build && npm run build:native-web && cap sync ios"
   },
   "dependencies": {
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "react-server-dom-webpack": "19.2.8",
-    "vinext": "1.0.0-beta.9",
     "@capacitor/core": "8.5.1",
     "@capacitor/geolocation": "8.2.2",
     "i18next": "26.4.1",
+    "leaflet": "^1.9.4",
     "lucide-react": "1.31.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "react-i18next": "17.0.13",
-    "react-icons": "5.7.0"
+    "react-icons": "5.7.0",
+    "react-server-dom-webpack": "19.2.8",
+    "vinext": "1.0.0-beta.9"
   },
   "devDependencies": {
     "@capacitor/android": "8.5.1",
@@ -42,11 +43,12 @@
     "@cloudflare/vite-plugin": "1.54.3",
     "@cloudflare/workers-types": "5.20260902.1",
     "@openai/sites-vite-plugin": "0.2.0",
+    "@playwright/test": "1.58.2",
     "@tailwindcss/postcss": "4.2.1",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "@playwright/test": "1.58.2",
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.34",
     "oxfmt": "0.61.0",

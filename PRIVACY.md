@@ -1,11 +1,13 @@
 # Datenschutz
 
-soklaro ist werbe- und trackerfrei, aber eine Online-Wetterabfrage ist keine übertragungsfreie Nutzung.
+soklaro ist werbe- und trackerfrei, aber eine Online-Wetterabfrage ist keine übertragungsfreie Nutzung. Externe Radarbilder und Kartenkacheln werden ausschließlich nach Öffnen des Regenradars geladen; dabei erhält der jeweilige Anbieter den sichtbaren Kartenausschnitt, nicht den Ortsnamen oder einen gesonderten GPS-Punkt. Beim Schließen enden weitere Abrufe. Die Hintergrundkarte nutzt den Browser-Cache, sie wird nicht zum Offline-Download angeboten.
 
 ## Netzwerkzugriffe
 
 | Host | Zweck | Übertragene Daten |
 | --- | --- | --- |
+| `maps.dwd.de` | Nur beim geöffneten Regenradar: Messzeitpunkte, Radarbild und Legende | IP-Adresse, Kartenausschnitt und gewählter Messzeitpunkt |
+| `tile.openstreetmap.org` | Nur beim geöffneten Regenradar: Hintergrundkarte | IP-Adresse, sichtbare Kartenkacheln und Seiten-Referer |
 | `api.open-meteo.com` | Forecast | IP-Adresse, gewählte oder gerundete Koordinaten, angeforderte Felder |
 | `geocoding-api.open-meteo.com` | Ortssuche | IP-Adresse, Suchbegriff und Sprache |
 | `nominatim.openstreetmap.org` | Ortsname nach aktiver GPS-Freigabe | IP-Adresse, gewählte oder gerundete Koordinaten und Sprache |
