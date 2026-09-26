@@ -1,7 +1,8 @@
 {
   "generator": "OpenAI built-in image generation tool",
   "created": "2026-09-01",
-  "runtimeRemoteLoads": false,
+  "runtimeRemoteLoads": true,
+  "runtimeRemoteSource": "Optional weather photos from Wikimedia Commons; attribution and per-file license appear next to the photo. Local images remain the fallback.",
   "masters": [
     { "file": "assets/source/master-day.png", "author": "soklaro contributors using the OpenAI image generator", "license": "CC0-1.0", "edit": "responsive crops, condition-specific brightness/color/tint, optional blur/precipitation treatment", "dominant": "#7f9cb4" },
     { "file": "assets/source/master-night.png", "author": "soklaro contributors using the OpenAI image generator", "license": "CC0-1.0", "edit": "responsive crops, condition-specific brightness/color/tint, optional blur/precipitation treatment", "dominant": "#10263a" }

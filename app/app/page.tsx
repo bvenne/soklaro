@@ -1,11 +1,14 @@
 'use client';
 import { useLocale } from '@/lib/i18n/use-locale';
+import { setAppTheme, useAppTheme, type AppTheme } from '@/lib/theme';
 
 import { lazy, Suspense, useEffect, useEffectEvent, useRef, useState } from 'react';
 import { Radar } from 'lucide-react';
 import { ArrowLeft, ChevronDown, CloudSunRain, Cloud, CloudRain, CloudSun, Droplets, Gauge, LocateFixed, MapPin, Menu, RefreshCw, Search, Sun, Sunrise, Sunset, Wind, X } from 'lucide-react';
 import { SoklaroMark } from '@/app/components/soklaro-mark';
+import { ColorWeatherIcon } from '@/app/components/color-weather-icon';
 import { ThemeColor } from '@/app/components/theme-color';
+import { useWeatherPhoto } from '@/app/components/use-weather-photo';
 import { backgroundFor, interpretWmo, statusBarColorFor } from '@/lib/weather/wmo';
 import { cacheForecast, clearLocalData, forgetPlace, readCachedForecast, readGeolocationDefault, readLastPlace, readLocationPrecisionDefault, readSavedPlaces, rememberPlace, saveLastPlace, setGeolocationDefault, setLocationPrecisionDefault } from '@/lib/weather/cache';
 import { requestLocation, roundCoordinates, type GeolocationResult, type LocationPrecision } from '@/lib/weather/geolocation';
@@ -14,9 +17,11 @@ import { hourSummary } from '@/lib/weather/hour-summary';
 import { periodSummaries } from '@/lib/weather/period-summary';
 import { deriveInsight } from '@/lib/weather/insights';
 import { hamburg, mockForecast } from '@/lib/weather/mock';
+import { setWeatherPhotosEnabled, useWeatherPhotosEnabled } from '@/lib/weather/photo-preference';
 import { OpenMeteoGeocodingProvider, OpenMeteoWeatherProvider } from '@/lib/weather/open-meteo';
 import { reverseGeocode } from '@/lib/weather/reverse-geocoding';
 import type { Place, WeatherForecast } from '@/lib/weather/types';
+import { InstallPrompt } from './install-prompt';
 import { PwaRegister } from './pwa-register';
 import { WiCloudy, WiDayCloudy, WiDaySunny, WiDaySunnyOvercast, WiFog, WiNa, WiNightClear, WiNightCloudy, WiNightFog, WiNightPartlyCloudy, WiNightRain, WiNightShowers, WiNightSnow, WiNightSprinkle, WiNightThunderstorm, WiRain, WiShowers, WiSleet, WiSnow, WiSprinkle, WiStormShowers, WiThunderstorm } from 'react-icons/wi';
 
@@ -86,7 +91,9 @@ function DataPill({ icon, label, value }: { icon: React.ReactNode; label: string
   return <div className="data-pill"><span aria-hidden="true">{icon}</span><div><small>{label}</small><strong>{value}</strong></div></div>;
 }
 
-function WeatherIcon({ code, isDay = true }: { code: number; isDay?: boolean }) {
+function WeatherIcon({ code, isDay = true, theme, sunShowers = false }: { code: number; isDay?: boolean; theme: AppTheme; sunShowers?: boolean }) {
+  if (theme === 'light') return <ColorWeatherIcon code={code} isDay={isDay} sunShowers={sunShowers} />;
+  if (sunShowers) return <CloudSunRain aria-hidden="true" />;
   const kind = interpretWmo(code).kind;
   const icons = {
     clear: isDay ? WiDaySunny : WiNightClear,
@@ -110,7 +117,11 @@ function WeatherIcon({ code, isDay = true }: { code: number; isDay?: boolean }) 
 
 export default function WeatherApp() {
   const { t, locale, number, setLanguage, preference } = useLocale();
+  const theme = useAppTheme();
+  const photosEnabled = useWeatherPhotosEnabled();
   const [mounted, setMounted] = useState(false);
+  const [loadedPhotoUrl, setLoadedPhotoUrl] = useState<string | null>(null);
+  const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null);
   const [clock, setClock] = useState<Date | null>(null);
   const [place, setPlace] = useState<Place>(hamburg);
   const [forecast, setForecast] = useState<WeatherForecast>(() => mockForecast());
@@ -222,19 +233,23 @@ export default function WeatherApp() {
   useEffect(() => { const offline = () => setStatus('offline'); window.addEventListener('offline', offline); return () => window.removeEventListener('offline', offline); }, []);
 
   const condition = interpretWmo(forecast.current.weatherCode);
+  const photo = useWeatherPhoto(place, condition.kind, forecast.current.isDay,
+    photosEnabled && forecast.place.id === place.id && forecast.source !== 'mock');
+  const photoVisible = photo !== null && loadedPhotoUrl === photo.url && failedPhotoUrl !== photo.url;
   const insight = clock ? deriveInsight(forecast, localIsoMinute(clock, forecast.timezone)) : '';
   const today = forecast.daily.find((day) => clock && day.date === localIsoMinute(clock, forecast.timezone).slice(0, 10)) ?? forecast.daily[0];
   const sunPosition = clock ? sunProgress(today, localIsoMinute(clock, forecast.timezone)) : null;
   const time = forecast.current.time.slice(11, 16);
   const updated = forecast.current.time.slice(11, 16);
-
   if (!mounted) {
     return <main className="weather-app app-boot" aria-busy="true"><div className="boot-mark" aria-hidden="true"><SoklaroMark /></div><p>{t("soklaro lädt das Wetter …")}</p></main>;
   }
 
   return (
-    <main className="weather-app"><PwaRegister /><ThemeColor color={statusBarColorFor(forecast.current.weatherCode, forecast.current.isDay)} />
-      <WeatherBackdrop forecast={forecast} /><div className="weather-overlay" aria-hidden="true" />
+    <main className="weather-app" data-theme={theme} data-weather-kind={condition.kind}><PwaRegister /><InstallPrompt /><ThemeColor color={theme === 'light' ? '#e9f5ff' : statusBarColorFor(forecast.current.weatherCode, forecast.current.isDay)} />
+      {theme === 'dark' && <WeatherBackdrop forecast={forecast} />}
+      {photo && failedPhotoUrl !== photo.url && <picture className={`weather-photo${photoVisible ? ' is-loaded' : ''}`}><img src={photo.url} alt="" loading="lazy" decoding="async" fetchPriority="low" onLoad={() => setLoadedPhotoUrl(photo.url)} onError={() => setFailedPhotoUrl(photo.url)} /></picture>}
+      {(theme === 'dark' || photoVisible) && <div className="weather-overlay" aria-hidden="true" />}
       <header className="app-header"><a className="brand-mark" href="/" aria-label={t("soklaro Startseite")}><span><SoklaroMark /></span>soklaro</a><nav><IconButton label={t("Ort suchen")} onClick={() => setSearchOpen(true)}><Search /></IconButton><IconButton label={t("Menü öffnen")} onClick={() => setSettingsOpen(true)}><Menu /></IconButton></nav></header>
       {(status === 'offline' || status === 'error') && <div className="status-banner" role="status">{status === 'offline' ? t("Offline – zuletzt gespeicherte oder Beispieldaten") : t("Live-Daten nicht erreichbar – Beispieldaten")}</div>}
       <section className="weather-hero" aria-labelledby="place-name" onTouchStart={(event) => { const touch = event.touches[0]; swipeStart.current = { x: touch.clientX, y: touch.clientY }; }} onTouchEnd={(event) => { const start = swipeStart.current; const touch = event.changedTouches[0]; swipeStart.current = null; if (!start) return; const x = touch.clientX - start.x; const y = touch.clientY - start.y; if (Math.abs(x) >= 60 && Math.abs(x) > Math.abs(y) * 1.25) switchPlace(x < 0 ? 1 : -1); }}>
@@ -244,13 +259,14 @@ export default function WeatherApp() {
         <p className="feels">{t("Gefühlt")} {Math.round(forecast.current.apparentTemperature)}{t("° · H")} {Math.round(today.temperatureMax)}{t("° / T")} {Math.round(today.temperatureMin)}°</p>
         <div className="insight-actions"><div className="insight">{insight.startsWith('Regen wahrscheinlich') ? <CloudRain aria-hidden="true" /> : <CloudSun aria-hidden="true" />}<strong>{t(insight)}</strong></div><button className="radar-trigger" aria-label={t('Regenradar öffnen')} title={t('Regenradar öffnen')} aria-haspopup="dialog" onClick={() => setRadarOpen(true)}><Radar aria-hidden="true" /></button></div>
         <p className="updated">{t("Aktualisiert")} {updated} · {forecast.source === 'live' ? t("Open‑Meteo Live-Daten") : forecast.source === 'cache' ? t("gespeicherte Daten") : t("Beispieldaten")}</p>
+        {photo && photoVisible && <footer className="photo-credit">{t("Foto:")} <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer">{photo.artist} · Wikimedia Commons</a> · <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer">{photo.license}</a> · {t("Bildausschnitt")}</footer>}
       </section>
 
       {radarOpen && <Suspense fallback={<p role="status">{t('Radar wird geöffnet …')}</p>}><RainRadar place={place} onClose={() => setRadarOpen(false)} /></Suspense>}
       <section className="forecast-content">
         <div className="section-heading"><div><p className="eyebrow">{t("Nächste Stunden")}</p><h2>{t("Der Tag im Blick")}</h2></div><p>{t("48 Stunden")}</p></div>
         <div className="hourly" tabIndex={0} aria-label={t("Horizontale 48-Stunden-Prognose")}>
-          {forecast.hourly.map((hour, index) => { const summary = hourSummary(hour); return <article key={`${hour.time}-${index}`} className={index === 0 ? 'now' : ''}><time>{index === 0 ? t("Jetzt") : hour.time.slice(11, 16)}</time><span className="weather-glyph" role="img" aria-label={t(summary.label)} title={t(summary.label)} data-weather-kind={interpretWmo(summary.code).kind}><WeatherIcon code={summary.code} isDay={hour.isDay} /></span><strong>{Math.round(hour.temperature)}°</strong><small>{hour.precipitationProbability}%</small>{hour.isDay && hour.sunshineDuration != null && <small hidden title={t("Sonnenschein in der Stunde ab der angezeigten Uhrzeit")}>☀ {Math.round(hour.sunshineDuration / 60)} min</small>}</article>; })}
+          {forecast.hourly.map((hour, index) => { const summary = hourSummary(hour); return <article key={`${hour.time}-${index}`} className={index === 0 ? 'now' : ''}><time>{index === 0 ? t("Jetzt") : hour.time.slice(11, 16)}</time><span className="weather-glyph" role="img" aria-label={t(summary.label)} title={t(summary.label)} data-weather-kind={interpretWmo(summary.code).kind}><WeatherIcon code={summary.code} isDay={hour.isDay} theme={theme} /></span><strong>{Math.round(hour.temperature)}°</strong><small>{hour.precipitationProbability}%</small>{hour.isDay && hour.sunshineDuration != null && <small hidden title={t("Sonnenschein in der Stunde ab der angezeigten Uhrzeit")}>☀ {Math.round(hour.sunshineDuration / 60)} min</small>}</article>; })}
         </div>
         <div className="detail-grid">
           <DataPill icon={<Droplets />} label={t("Luftfeuchte")} value={`${forecast.current.humidity}%`} />
@@ -270,7 +286,7 @@ export default function WeatherApp() {
             return <details className="day-forecast" key={`${forecast.place.id}-${day.date}`}>
               <summary className="day-toggle">
                 <time dateTime={day.date}>{index === 0 ? t("Heute") : new Intl.DateTimeFormat(locale, { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' }).format(new Date(`${day.date}T12:00:00Z`))}</time>
-                <span className="daily-condition" role="img" aria-label={t(summary.label)} title={`${t(summary.label)} · ${t('Stärkstes Tagesereignis')}: ${t(interpretWmo(day.weatherCode).label)}`} >{summary.label === 'Sonne und Schauer' ? <CloudSunRain aria-hidden="true" /> : <WeatherIcon code={summary.code} />}<small>{t(summary.label)}</small></span>
+                <span className="daily-condition" role="img" aria-label={t(summary.label)} title={`${t(summary.label)} · ${t('Stärkstes Tagesereignis')}: ${t(interpretWmo(day.weatherCode).label)}`} ><WeatherIcon code={summary.code} theme={theme} sunShowers={summary.label === 'Sonne und Schauer'} /><small>{t(summary.label)}</small></span>
                 <span className="daily-metrics"><small title={t("Regenwahrscheinlichkeit")}><CloudRain aria-hidden="true" />{day.precipitationProbability}%</small><small title={t("Erwartete Niederschlagsmenge")}><Droplets aria-hidden="true" />{number(day.precipitationSum, 1)} mm</small><small title={t("Sonnenscheindauer")}><Sun aria-hidden="true" />{number(day.sunshineDuration / 3600, 1)} h</small></span>
                 <strong>{Math.round(day.temperatureMax)}° <em>{Math.round(day.temperatureMin)}°</em></strong>
                 <ChevronDown className="day-chevron" aria-hidden="true" />
@@ -278,7 +294,7 @@ export default function WeatherApp() {
               <div className="day-periods">
                 {periods.map(period => <div className="day-period" key={period.name}>
                   <h3>{t(period.name)}</h3><small className="period-time">{t(period.range)}</small>
-                  <span className="period-symbol" role="img" aria-label={t(period.label)}><WeatherIcon code={period.code} isDay={period.isDay} /></span>
+                  <span className="period-symbol" role="img" aria-label={t(period.label)}><WeatherIcon code={period.code} isDay={period.isDay} theme={theme} /></span>
                   <p className="period-description">{t(period.label)}</p>
                   <strong className="period-temperature">{value(period.temperatureMin, '°')} – {value(period.temperatureMax, '°')}</strong>
                   <dl>
@@ -295,7 +311,7 @@ export default function WeatherApp() {
       </section>
 
       {searchOpen && <SearchPanel onSelect={choosePlace} onClose={() => setSearchOpen(false)} />}
-      {settingsOpen && <div className="drawer-backdrop" onClick={() => setSettingsOpen(false)}><aside className="settings-drawer" aria-label={t("Einstellungen")} onClick={(event) => event.stopPropagation()}><div className="drawer-title"><h2>{t("Einstellungen")}</h2><IconButton label={t("Menü schließen")} onClick={() => setSettingsOpen(false)}><X /></IconButton></div><label className="language-setting"><span>{t("Sprache")}</span><select value={preference} onChange={(event) => setLanguage(event.target.value)}><option value="auto">{t("Automatisch (Browser)")}</option><option value="de">Deutsch</option><option value="en">English</option></select></label>{savedPlaces.length > 0 && <section className="saved-places-settings" aria-labelledby="saved-places-title"><h3 id="saved-places-title">{t("Gespeicherte Orte")}</h3>{savedPlaces.map((saved) => <div key={saved.id}><button className="saved-place-name" onClick={() => { choosePlace(saved); setSettingsOpen(false); }}>{saved.id.startsWith('geo:') ? <LocateFixed aria-hidden="true" /> : <MapPin aria-hidden="true" />}<span>{saved.name}</span></button><button className="remove-place" aria-label={t('{{name}} entfernen', { name: saved.name })} onClick={() => removePlace(saved.id)}><X aria-hidden="true" /></button></div>)}</section>}<p>{t("Standortzugriff erfolgt nur nach deiner Aktion. Die gewählten oder gerundeten Koordinaten gehen an Open‑Meteo und zur einmaligen Ortsbenennung an OpenStreetMap.")}</p><div className="location-default"><input id="geolocation-default" type="checkbox" aria-describedby="geolocation-default-help" checked={geolocationDefault} onChange={(event) => { if (event.target.checked) void locate(true); else disableGeolocation(); }} /><label htmlFor="geolocation-default"><strong>{t("GPS-Standort als Standard")}</strong><small id="geolocation-default-help">{t("Nach Aktivierung wird der Standort bei künftigen Starts automatisch aktualisiert.")}</small></label></div><fieldset><legend>{t("Koordinatengenauigkeit")}</legend>{(['exact', 'approximate', 'private'] as const).map((item) => <label key={item}><input type="radio" name="precision" value={item} checked={precision === item} onChange={() => { setPrecision(item); if (geolocationDefault) setLocationPrecisionDefault(item); }} /><span><strong>{item === 'exact' ? t("Exakt") : item === 'approximate' ? t("Ungefähr · ca. 1 km") : t("Privat · ca. 5 km")}</strong>{item === 'private' && <small>{t("Kann an Küsten und in Bergen die Prognose beeinflussen.")}</small>}</span></label>)}</fieldset><button className="primary-button" onClick={() => void locate(!geolocationDefault)}><LocateFixed />{geolocationDefault ? t("Standort aktualisieren") : t("Meinen Standort verwenden")}</button>{locationStatus && locationStatus !== 'allowed' && <p role="status">{t("Standortstatus:")} {t({ denied: "Zugriff verweigert", blocked: "Zugriff blockiert", unavailable: "Nicht verfügbar", timeout: "Zeitüberschreitung", inaccurate: "Standort zu ungenau" }[locationStatus])}</p>}<a className="secondary-link" href="/privacy">{t("Netzwerk & Datenschutz")}</a><button className="danger-button" onClick={() => { clearLocalData(); setLanguage('auto'); setSavedPlaces([]); setGeolocationDefaultState(false); setLocationStatus(null); setPrecision('private'); setPlace(hamburg); void load(hamburg); setSettingsOpen(false); }}>{t("Alle lokalen Daten löschen")}</button></aside></div>}
+      {settingsOpen && <div className="drawer-backdrop" onClick={() => setSettingsOpen(false)}><aside className="settings-drawer" aria-label={t("Einstellungen")} onClick={(event) => event.stopPropagation()}><div className="drawer-title"><h2>{t("Einstellungen")}</h2><IconButton label={t("Menü schließen")} onClick={() => setSettingsOpen(false)}><X /></IconButton></div><fieldset className="theme-setting"><legend>{t("Darstellung")}</legend><div>{(["dark", "light"] as const).map((option) => <button key={option} type="button" aria-pressed={theme === option} onClick={() => setAppTheme(option)}>{option === "dark" ? t("Dunkel") : t("Hell")}</button>)}</div></fieldset><label className="photo-setting"><input type="checkbox" aria-label={t("Wetterfotos anzeigen")} checked={photosEnabled} onChange={(event) => setWeatherPhotosEnabled(event.target.checked)} /><span><strong>{t("Wetterfotos anzeigen")}</strong><small>{t("Bilder von Wikimedia Commons. Dabei werden IP-Adresse, Ortsname und Wetterlage übertragen.")}</small></span></label><label className="language-setting"><span>{t("Sprache")}</span><select value={preference} onChange={(event) => setLanguage(event.target.value)}><option value="auto">{t("Automatisch (Browser)")}</option><option value="de">Deutsch</option><option value="en">English</option></select></label>{savedPlaces.length > 0 && <section className="saved-places-settings" aria-labelledby="saved-places-title"><h3 id="saved-places-title">{t("Gespeicherte Orte")}</h3>{savedPlaces.map((saved) => <div key={saved.id}><button className="saved-place-name" onClick={() => { choosePlace(saved); setSettingsOpen(false); }}>{saved.id.startsWith('geo:') ? <LocateFixed aria-hidden="true" /> : <MapPin aria-hidden="true" />}<span>{saved.name}</span></button><button className="remove-place" aria-label={t('{{name}} entfernen', { name: saved.name })} onClick={() => removePlace(saved.id)}><X aria-hidden="true" /></button></div>)}</section>}<p>{t("Standortzugriff erfolgt nur nach deiner Aktion. Die gewählten oder gerundeten Koordinaten gehen an Open‑Meteo und zur einmaligen Ortsbenennung an OpenStreetMap.")}</p><div className="location-default"><input id="geolocation-default" type="checkbox" aria-describedby="geolocation-default-help" checked={geolocationDefault} onChange={(event) => { if (event.target.checked) void locate(true); else disableGeolocation(); }} /><label htmlFor="geolocation-default"><strong>{t("GPS-Standort als Standard")}</strong><small id="geolocation-default-help">{t("Nach Aktivierung wird der Standort bei künftigen Starts automatisch aktualisiert.")}</small></label></div><fieldset><legend>{t("Koordinatengenauigkeit")}</legend>{(['exact', 'approximate', 'private'] as const).map((item) => <label key={item}><input type="radio" name="precision" value={item} checked={precision === item} onChange={() => { setPrecision(item); if (geolocationDefault) setLocationPrecisionDefault(item); }} /><span><strong>{item === 'exact' ? t("Exakt") : item === 'approximate' ? t("Ungefähr · ca. 1 km") : t("Privat · ca. 5 km")}</strong>{item === 'private' && <small>{t("Kann an Küsten und in Bergen die Prognose beeinflussen.")}</small>}</span></label>)}</fieldset><button className="primary-button" onClick={() => void locate(!geolocationDefault)}><LocateFixed />{geolocationDefault ? t("Standort aktualisieren") : t("Meinen Standort verwenden")}</button>{locationStatus && locationStatus !== 'allowed' && <p role="status">{t("Standortstatus:")} {t({ denied: "Zugriff verweigert", blocked: "Zugriff blockiert", unavailable: "Nicht verfügbar", timeout: "Zeitüberschreitung", inaccurate: "Standort zu ungenau" }[locationStatus])}</p>}<a className="secondary-link" href="/privacy">{t("Netzwerk & Datenschutz")}</a><button className="danger-button" onClick={() => { clearLocalData(); setAppTheme("dark", false); setWeatherPhotosEnabled(true, false); setLanguage('auto'); setSavedPlaces([]); setGeolocationDefaultState(false); setLocationStatus(null); setPrecision('private'); setPlace(hamburg); void load(hamburg); setSettingsOpen(false); }}>{t("Alle lokalen Daten löschen")}</button></aside></div>}
     </main>
   );
 }

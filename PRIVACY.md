@@ -11,8 +11,10 @@ soklaro ist werbe- und trackerfrei, aber eine Online-Wetterabfrage ist keine üb
 | `api.open-meteo.com` | Forecast | IP-Adresse, gewählte oder gerundete Koordinaten, angeforderte Felder |
 | `geocoding-api.open-meteo.com` | Ortssuche | IP-Adresse, Suchbegriff und Sprache |
 | `nominatim.openstreetmap.org` | Ortsname nach aktiver GPS-Freigabe | IP-Adresse, gewählte oder gerundete Koordinaten und Sprache |
+| `commons.wikimedia.org` | Suche nach einem optionalen Wetterfoto | IP-Adresse, Ortsname und Wetterbegriff; keine GPS-Koordinaten |
+| `thumb.wikimedia.org`, `upload.wikimedia.org` | Verkleinertes Wetterfoto bei passendem Treffer | IP-Adresse und angefragte Bilddatei |
 
-Bei einer konfigurierten Kunden- oder Self-Hosting-Instanz ersetzt deren Host den Forecast-Host. Die App lädt keine externen Wetterbilder, Fonts, Skripte oder Analytics. Open‑Meteo erklärt, Logs bis zu 90 Tage aufbewahren zu können; vor Veröffentlichung ist die aktuelle Provider-Erklärung erneut zu prüfen.
+Bei einer konfigurierten Kunden- oder Self-Hosting-Instanz ersetzt deren Host den Forecast-Host. Die App lädt keine externen Fonts, Skripte oder Analytics. Optionale Wikimedia-Commons-Fotos lassen sich in den Einstellungen ausschalten; ohne passenden Treffer oder offline bleiben die lokalen Hintergründe sichtbar. Das Foto ist eine Illustration, keine aktuelle Wetteraufnahme. Urheber, Quelle, Lizenz und Bildausschnitt werden beim Foto genannt. Open‑Meteo erklärt, Logs bis zu 90 Tage aufbewahren zu können; vor Veröffentlichung ist die aktuelle Provider-Erklärung erneut zu prüfen.
 
 Der Standort wird nur nach Nutzeraktion angefragt. Exakte Koordinaten werden standardmäßig nicht dauerhaft gespeichert. Vor der Übertragung kann auf ungefähr 1 km oder 5 km gerundet werden; das kann in Gebirgen und Küstenregionen die Prognose und den angezeigten Ortsnamen beeinflussen. Nach derselben Aktion fragt die App Nominatim einmalig nach einem Ortsnamen. Der ermittelte Ort wird lokal gespeichert und beim Start nicht erneut abgefragt. Ortsdaten stammen von © OpenStreetMap-Mitwirkende und stehen unter ODbL.
 

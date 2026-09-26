@@ -1,6 +1,10 @@
 # Assets
 
-soklaro lädt zur Laufzeit keine externen Bilder, Schriften oder Icon-CDNs.
+soklaro lädt Wetterfotos bei aktivierter Option von Wikimedia Commons. Die
+Commons-Dateiseite, Urheberangabe und Einzellizenz werden direkt am Bild
+verlinkt. Fehlt ein geeignetes Foto, bleiben die lokalen Wetterbilder bzw.
+der helle Farbverlauf sichtbar. Externe Schriften oder Icon-CDNs werden nicht
+geladen.
 
 - Die beiden Wetter-Ausgangsbilder in `assets/source/` wurden mit dem
   OpenAI-Bildgenerator für dieses Projekt erzeugt.

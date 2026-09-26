@@ -41,7 +41,15 @@ Die Schrift wird lokal ausgeliefert; der vollständige Lizenztext liegt unter
 
 ## soklaro Wetterbilder
 
-Originalbilder wurden mit dem integrierten OpenAI-Bildgenerator für dieses Repository erzeugt und lokal bearbeitet. Ausgangsbilder und Wettervarianten stehen unter CC0-1.0. Keine Remote-Quelle und kein Standortdatum wird zur Laufzeit für die Auswahl verwendet. Details: `ASSET_LICENSE.md`, `docs/ASSETS.md` und `docs/assets.json`.
+Originalbilder wurden mit dem integrierten OpenAI-Bildgenerator für dieses Repository erzeugt und lokal bearbeitet. Ausgangsbilder und Wettervarianten stehen unter CC0-1.0. Sie bleiben der Offline-Fallback. Details: `ASSET_LICENSE.md`, `docs/ASSETS.md` und `docs/assets.json`.
+
+## Optionale Wikimedia-Commons-Wetterfotos
+
+Bei aktivierter Option sucht die App mit Ortsname und Wetterbegriff auf Wikimedia Commons
+und lädt ein verkleinertes Foto direkt von Wikimedia. Die jeweilige Datei wird nur
+angezeigt, wenn Urheber, Dateiseite und eine freie Einzellizenz vorliegen. Urheber,
+Quelle, Lizenz und Bildausschnitt werden unmittelbar beim Foto genannt und verlinkt.
+Die Fotos gehören nicht zum Repository und stehen nicht unter der soklaro-Assetlizenz.
 
 ## JavaScript- und Native-Abhängigkeiten
 
