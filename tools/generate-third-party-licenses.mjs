@@ -6,10 +6,40 @@ const outputArgument = process.argv.slice(2).find((argument) => !argument.starts
 const outputPath = path.resolve(projectRoot, outputArgument ?? 'public/legal/third-party-licenses.txt');
 const checkOnly = process.argv.includes('--check');
 const lock = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package-lock.json'), 'utf8'));
+const lockPackages = lock.packages ?? {};
+const bundledBuildRoots = ['vinext'];
+const bundledLocations = new Set();
 const packages = new Map();
 
-for (const [location, lockEntry] of Object.entries(lock.packages ?? {})) {
-  if (!location || lockEntry.dev || lockEntry.optional || !location.includes('node_modules/')) continue;
+function resolveDependencyLocation(fromLocation, dependencyName) {
+  let directory = path.join(projectRoot, fromLocation);
+  while (directory.startsWith(projectRoot)) {
+    const candidate = path.relative(projectRoot, path.join(directory, 'node_modules', dependencyName));
+    if (lockPackages[candidate]) return candidate;
+    if (directory === projectRoot) break;
+    directory = path.dirname(directory);
+  }
+  return null;
+}
+
+const bundledQueue = bundledBuildRoots
+  .map((name) => `node_modules/${name}`)
+  .filter((location) => lockPackages[location]);
+
+while (bundledQueue.length > 0) {
+  const location = bundledQueue.shift();
+  if (bundledLocations.has(location)) continue;
+  bundledLocations.add(location);
+  const lockEntry = lockPackages[location];
+  for (const dependencyName of Object.keys(lockEntry.dependencies ?? {})) {
+    const dependencyLocation = resolveDependencyLocation(location, dependencyName);
+    if (dependencyLocation && !lockPackages[dependencyLocation].optional) bundledQueue.push(dependencyLocation);
+  }
+}
+
+for (const [location, lockEntry] of Object.entries(lockPackages)) {
+  const isBundledBuildDependency = bundledLocations.has(location);
+  if (!location || (lockEntry.dev && !isBundledBuildDependency) || lockEntry.optional || !location.includes('node_modules/')) continue;
   const packageDir = path.join(projectRoot, location);
   const manifestPath = path.join(packageDir, 'package.json');
   if (!fs.existsSync(manifestPath)) {
@@ -38,7 +68,7 @@ const sections = [...packages.entries()].sort(([a], [b]) => a.localeCompare(b)).
 });
 
 const report = [
-  'SOKLARO – LIZENZEN DER PRODUKTIONSABHÄNGIGKEITEN',
+  'SOKLARO – LIZENZEN DER PRODUKTIONS- UND GEBÜNDELTEN ABHÄNGIGKEITEN',
   '',
   'Automatisch aus package-lock.json und den installierten Paketen erzeugt.',
   `Enthaltene eindeutige Pakete: ${sections.length}`,
