@@ -10,7 +10,9 @@ import { ColorWeatherIcon } from '@/app/components/color-weather-icon';
 import { ThemeColor } from '@/app/components/theme-color';
 import { useWeatherPhoto } from '@/app/components/use-weather-photo';
 import { backgroundFor, interpretWmo, statusBarColorFor } from '@/lib/weather/wmo';
-import { cacheForecast, clearLocalData, forgetPlace, readCachedForecast, readGeolocationDefault, readLastPlace, readLocationPrecisionDefault, readSavedPlaces, rememberPlace, saveLastPlace, setGeolocationDefault, setLocationPrecisionDefault } from '@/lib/weather/cache';
+import { clearLocalData, forgetPlace, readCachedForecast, readGeolocationDefault, readLastPlace, readLocationPrecisionDefault, readSavedPlaces, rememberPlace, saveLastPlace, setGeolocationDefault, setLocationPrecisionDefault } from '@/lib/weather/cache';
+import { loadForecast } from '@/lib/weather/load-forecast';
+import type { WeatherFailure } from '@/lib/weather/request-error';
 import { requestLocation, roundCoordinates, type GeolocationResult, type LocationPrecision } from '@/lib/weather/geolocation';
 import { daySummary, sunProgress } from '@/lib/weather/day-summary';
 import { hourSummary } from '@/lib/weather/hour-summary';
@@ -28,6 +30,13 @@ import { WiCloudy, WiDayCloudy, WiDaySunny, WiDaySunnyOvercast, WiFog, WiNa, WiN
 const weatherProvider = new OpenMeteoWeatherProvider();
 const RainRadar = lazy(() => import('@/app/components/rain-radar'));
 const geocodingProvider = new OpenMeteoGeocodingProvider();
+const failureMessages: Record<WeatherFailure, string> = {
+  timeout: 'Die Wetteranfrage dauert zu lange. Bitte erneut versuchen.',
+  network: 'Verbindung zum Wetterdienst fehlgeschlagen. Bitte erneut versuchen.',
+  'rate-limit': 'Der Wetterdienst erhält zu viele Anfragen. Bitte später erneut versuchen.',
+  http: 'Der Wetterdienst ist derzeit nicht verfügbar. Bitte später erneut versuchen.',
+  'invalid-data': 'Die Antwort des Wetterdienstes konnte nicht gelesen werden.',
+};
 
 function localIsoMinute(date: Date, timeZone: string): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -132,19 +141,28 @@ export default function WeatherApp() {
   const [geolocationDefault, setGeolocationDefaultState] = useState(false);
   const [precision, setPrecision] = useState<LocationPrecision>('private');
   const [status, setStatus] = useState<'idle' | 'loading' | 'offline' | 'error'>('idle');
+  const [requestFailure, setRequestFailure] = useState<WeatherFailure | null>(null);
   const [locationStatus, setLocationStatus] = useState<GeolocationResult['status'] | null>(null);
   const activeRequest = useRef<AbortController | null>(null);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
 
   const load = async (nextPlace = place) => {
-    activeRequest.current?.abort(); activeRequest.current = new AbortController(); setStatus('loading');
+    activeRequest.current?.abort();
+    const controller = new AbortController();
+    activeRequest.current = controller;
+    setStatus('loading');
+    setRequestFailure(null);
     try {
-      const next = await weatherProvider.getForecast(nextPlace, activeRequest.current.signal);
-      setForecast(next); cacheForecast(next); setStatus('idle');
+      const result = await loadForecast(weatherProvider, nextPlace, controller.signal);
+      if (activeRequest.current !== controller || controller.signal.aborted) return;
+      setForecast(result.forecast);
+      setRequestFailure(result.failure);
+      setStatus(result.status === 'error' && !navigator.onLine ? 'offline' : result.status);
     } catch {
-      const cached = readCachedForecast(nextPlace.id);
-      if (cached) { setForecast(cached.forecast); setStatus('offline'); }
-      else { setForecast(mockForecast(nextPlace)); setStatus(navigator.onLine ? 'error' : 'offline'); }
+      // Cancelled and superseded requests must not replace the newly selected place's forecast.
+      if (activeRequest.current !== controller || controller.signal.aborted) return;
+      setRequestFailure('invalid-data');
+      setStatus('error');
     }
   };
 
@@ -251,7 +269,7 @@ export default function WeatherApp() {
       {photo && failedPhotoUrl !== photo.url && <picture className={`weather-photo${photoVisible ? ' is-loaded' : ''}`}><img src={photo.url} alt="" loading="lazy" decoding="async" fetchPriority="low" onLoad={() => setLoadedPhotoUrl(photo.url)} onError={() => setFailedPhotoUrl(photo.url)} /></picture>}
       {(theme === 'dark' || photoVisible) && <div className="weather-overlay" aria-hidden="true" />}
       <header className="app-header"><a className="brand-mark" href="/" aria-label={t("soklaro Startseite")}><span><SoklaroMark /></span>soklaro</a><nav><IconButton label={t("Ort suchen")} onClick={() => setSearchOpen(true)}><Search /></IconButton><IconButton label={t("Menü öffnen")} onClick={() => setSettingsOpen(true)}><Menu /></IconButton></nav></header>
-      {(status === 'offline' || status === 'error') && <div className="status-banner" role="status">{status === 'offline' ? t("Offline – zuletzt gespeicherte oder Beispieldaten") : t("Live-Daten nicht erreichbar – Beispieldaten")}</div>}
+      {(status === 'offline' || status === 'error') && <div className="status-banner" role="status">{requestFailure ? `${t(failureMessages[requestFailure])} ${forecast.source === 'cache' ? t('Gespeicherte Prognose wird angezeigt.') : t('Beispieldaten werden angezeigt.')}` : t("Offline – zuletzt gespeicherte oder Beispieldaten")}</div>}
       <section className="weather-hero" aria-labelledby="place-name" onTouchStart={(event) => { const touch = event.touches[0]; swipeStart.current = { x: touch.clientX, y: touch.clientY }; }} onTouchEnd={(event) => { const start = swipeStart.current; const touch = event.changedTouches[0]; swipeStart.current = null; if (!start) return; const x = touch.clientX - start.x; const y = touch.clientY - start.y; if (Math.abs(x) >= 60 && Math.abs(x) > Math.abs(y) * 1.25) switchPlace(x < 0 ? 1 : -1); }}>
         <div className="place-row"><div><p className="eyebrow">{t("Dein Wetter")}</p><div className="place-title">{place.id.startsWith('geo:') && <LocateFixed aria-label={t("Per GPS ermittelter Ort")} />}<h1 id="place-name">{place.name}</h1></div><p>{time} · {t(condition.label)}</p></div><IconButton label={t("Wetter aktualisieren")} onClick={() => void load()}><RefreshCw className={status === 'loading' ? 'spinning' : ''} /></IconButton></div>
         {savedPlaces.length > 1 && <nav className="place-switcher" aria-label={t("Gespeicherte Orte")} onTouchStart={(event) => event.stopPropagation()} onTouchEnd={(event) => event.stopPropagation()}>{savedPlaces.map((saved) => <button key={saved.id} aria-current={saved.id === place.id ? 'location' : undefined} onClick={() => choosePlace(saved)}>{saved.id.startsWith('geo:') ? <LocateFixed aria-hidden="true" /> : <MapPin aria-hidden="true" />}{saved.name}</button>)}</nav>}

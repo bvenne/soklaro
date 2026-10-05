@@ -68,4 +68,23 @@ describe('last selected place', () => {
     localStorage.setItem('soklaro:location-precision', 'street-level');
     expect(readLocationPrecisionDefault()).toBe('private');
   });
+
+  it('allows selection of a new place when persistence is full', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => null,
+      setItem: () => { throw new DOMException('Full', 'QuotaExceededError'); },
+    });
+    expect(() => saveLastPlace(berlin)).not.toThrow();
+    expect(rememberPlace(berlin)).toEqual([berlin]);
+  });
+
+  it('can initialise when storage reads are blocked', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => { throw new DOMException('Blocked', 'SecurityError'); },
+    });
+    expect(readLastPlace()).toBeNull();
+    expect(readSavedPlaces()).toEqual([]);
+    expect(readGeolocationDefault()).toBe(false);
+    expect(readLocationPrecisionDefault()).toBe('private');
+  });
 });

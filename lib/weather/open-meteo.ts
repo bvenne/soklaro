@@ -1,5 +1,6 @@
 import type { GeocodingProvider, Place, WeatherForecast, WeatherPoint, WeatherProvider } from './types';
 import { preferredLocale } from '../i18n/config';
+import { WeatherRequestError } from './request-error';
 
 declare const __OPEN_METEO_URL__: string;
 declare const __OPEN_METEO_GEOCODING_URL__: string;
@@ -24,15 +25,26 @@ function numberAt(values: unknown[] | undefined, index: number, fallback = 0): n
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
-async function fetchJson(url: string, signal?: AbortSignal): Promise<any> {
+async function fetchJson(url: string, signal?: AbortSignal, timeoutMs = 10_000): Promise<any> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort('timeout'), 10_000);
+  let timedOut = false;
+  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
   const onAbort = () => controller.abort(signal?.reason);
-  signal?.addEventListener('abort', onAbort, { once: true });
+  if (signal?.aborted) onAbort();
+  else signal?.addEventListener('abort', onAbort, { once: true });
   try {
     const response = await fetch(url, { signal: controller.signal, headers: { Accept: 'application/json' } });
-    if (!response.ok) throw new Error(response.status === 429 ? 'rate-limit' : `http-${response.status}`);
-    return await response.json();
+    if (!response.ok) throw new WeatherRequestError(response.status === 429 ? 'rate-limit' : 'http', response.status);
+    try { return await response.json(); }
+    catch (error) {
+      if (controller.signal.aborted) throw error;
+      throw new WeatherRequestError('invalid-data');
+    }
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    if (timedOut) throw new WeatherRequestError('timeout');
+    if (error instanceof WeatherRequestError) throw error;
+    throw new WeatherRequestError('network');
   } finally {
     clearTimeout(timeout);
     signal?.removeEventListener('abort', onAbort);
@@ -52,7 +64,7 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
       forecast_days: '15', models: 'best_match',
       current: currentFields, hourly: hourlyFields, daily: dailyFields,
     });
-    const data = await fetchJson(`${this.base}/v1/forecast?${params}`, signal);
+    const data = await fetchJson(`${this.base}/v1/forecast?${params}`, signal, 20_000);
     const point = (index: number): WeatherPoint => ({
       // The value at 10:00 describes 09:00–10:00. Fetch one extra endpoint.
       sunshineDuration: typeof data.hourly.sunshine_duration?.[index + 1] === 'number'
