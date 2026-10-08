@@ -13,7 +13,6 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
-import Link from 'next/link';
 import { useLocale } from '@/lib/i18n/use-locale';
 import type { AppTheme } from '@/lib/theme';
 import type {
@@ -372,10 +371,11 @@ export function SettingsPanel(props: SettingsPanelProps) {
             aria-labelledby="settings-data-title"
           >
             <h3 id="settings-data-title">{t('Datenschutz & Daten')}</h3>
-            <Link className="settings-privacy-link" href="/privacy">
+            {/* oxlint-disable-next-line nextjs/no-html-link-for-pages -- Shared with the standalone Capacitor build, without the Next router. */}
+            <a className="settings-privacy-link" href="/privacy">
               {t('Datenschutz')}
               <ChevronRight aria-hidden="true" />
-            </Link>
+            </a>
             {confirmReset ? (
               <div className="settings-reset-confirm">
                 <p>

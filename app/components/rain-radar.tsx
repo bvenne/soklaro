@@ -9,7 +9,6 @@ import {
   RefreshCw,
   X,
 } from 'lucide-react';
-import Link from 'next/link';
 import type * as Leaflet from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useLocale } from '@/lib/i18n/use-locale';
@@ -575,7 +574,8 @@ export default function RainRadar({
             CC BY 4.0
           </a>{' '}
           · {t('Kartendarstellung angepasst')} ·{' '}
-          <Link href="/privacy">{t('Datenschutz')}</Link>
+          {/* oxlint-disable-next-line nextjs/no-html-link-for-pages -- Shared with the standalone Capacitor build, without the Next router. */}
+          <a href="/privacy">{t('Datenschutz')}</a>
         </p>
       </div>
     </dialog>

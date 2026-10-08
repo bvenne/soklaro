@@ -9,7 +9,7 @@ soklaro ist eine freie, werbe- und trackerfreie Wetter-App für Web, PWA, iOS un
 Voraussetzungen: Node.js 22.13 oder neuer.
 
 ```bash
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 ```
@@ -27,11 +27,16 @@ npm run test:e2e
 
 Tests verwenden ausschließlich lokale Fixtures und keine Live-API.
 
+Prüfe auch den vollständigen `npm audit`, nicht nur `--omit=dev`: Der
+Serverstart verwendet Wrangler aus den Entwicklungsabhängigkeiten.
+Derzeit bleibt die [ungepatchte braces-Lücke](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
+in Vinexts Build-Abhängigkeiten. `npm audit fix --force` schlägt hierfür ein
+inkompatibles Vinext-Downgrade vor und sollte nicht ungeprüft ausgeführt werden.
+
 ## Native Apps
 
 ```bash
-npm run build
-npx cap sync
+npm run cap:sync
 npx cap open android
 npx cap open ios
 ```
@@ -39,6 +44,12 @@ npx cap open ios
 Android Studio und Xcode sind kostenlos erhältlich. Apple und Google verlangen für Store-Konten eigene Gebühren und erfüllen weitere Prüfanforderungen. iOS-Builds benötigen macOS und Xcode.
 
 ## Architektur
+
+Die Oberflächen verwenden eigenes CSS mit einem kleinen lokalen Reset, ohne
+Tailwind oder zusätzliche UI-Frameworks. Cloudflare/Vinext bleiben für den
+bestehenden Serverbetrieb nötig; Capacitor nur für die nativen Builds.
+`sharp` ist das Buildwerkzeug für die App-Icons und wird auch in den
+Serverwerkzeugen auf dieselbe gepatchte Version festgelegt.
 
 - `app/`: Landingpage, Wetter-App und Privacy-Ansicht
 - `lib/weather/`: Provider, Modelle, WMO-Mapping, Cache, Insights und Geolocation

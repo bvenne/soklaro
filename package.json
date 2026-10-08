@@ -41,19 +41,17 @@
     "@capacitor/ios": "8.5.1",
     "@cloudflare/vite-plugin": "1.62.5",
     "@cloudflare/workers-types": "5.20261005.1",
-    "@openai/sites-vite-plugin": "0.2.0",
     "@playwright/test": "1.58.2",
-    "@tailwindcss/postcss": "4.2.1",
     "@types/leaflet": "^1.9.22",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.34",
-    "oxfmt": "0.61.0",
+    "oxfmt": "0.72.0",
     "oxlint": "1.76.0",
     "oxlint-tsgolint": "7.0.2001",
-    "tailwindcss": "4.2.1",
+    "sharp": "0.35.5",
     "typescript": "5.9.3",
     "vite": "8.2.2",
     "vinext": "1.0.1",
@@ -62,6 +60,7 @@
   },
   "overrides": {
     "fflate": "0.7.5",
+    "sharp": "$sharp",
     "xcode": {
       "uuid": "11.1.1"
     }
