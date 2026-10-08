@@ -25,6 +25,7 @@ import { reverseGeocode } from '@/lib/weather/reverse-geocoding';
 import type { Place, WeatherForecast } from '@/lib/weather/types';
 import { InstallPrompt } from './install-prompt';
 import { PwaRegister } from './pwa-register';
+import { SettingsPanel } from './settings-panel';
 import { WiCloudy, WiDayCloudy, WiDaySunny, WiDaySunnyOvercast, WiFog, WiNa, WiNightClear, WiNightCloudy, WiNightFog, WiNightPartlyCloudy, WiNightRain, WiNightShowers, WiNightSnow, WiNightSprinkle, WiNightThunderstorm, WiRain, WiShowers, WiSleet, WiSnow, WiSprinkle, WiStormShowers, WiThunderstorm } from 'react-icons/wi';
 
 const weatherProvider = new OpenMeteoWeatherProvider();
@@ -125,7 +126,7 @@ function WeatherIcon({ code, isDay = true, theme, sunShowers = false }: { code: 
 }
 
 export default function WeatherApp() {
-  const { t, locale, number, setLanguage, preference } = useLocale();
+  const { t, locale, number } = useLocale();
   const theme = useAppTheme();
   const photosEnabled = useWeatherPhotosEnabled();
   const [mounted, setMounted] = useState(false);
@@ -143,6 +144,8 @@ export default function WeatherApp() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'offline' | 'error'>('idle');
   const [requestFailure, setRequestFailure] = useState<WeatherFailure | null>(null);
   const [locationStatus, setLocationStatus] = useState<GeolocationResult['status'] | null>(null);
+  const [locating, setLocating] = useState(false);
+  const locationInProgress = useRef(false);
   const activeRequest = useRef<AbortController | null>(null);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
 
@@ -175,6 +178,10 @@ export default function WeatherApp() {
   };
 
   const locate = async (makeDefault = false, requestedPrecision = precision): Promise<boolean> => {
+    if (locationInProgress.current) return false;
+    locationInProgress.current = true;
+    setLocating(true);
+    try {
     setLocationStatus(null);
     const result = await requestLocation();
     setLocationStatus(result.status);
@@ -191,6 +198,13 @@ export default function WeatherApp() {
     } catch { /* Die Wetterabfrage funktioniert auch, wenn die Ortsbenennung nicht erreichbar ist. */ }
     choosePlace({ id: `geo:${coordinates.latitude},${coordinates.longitude}`, ...namedPlace, ...coordinates });
     return true;
+    } catch {
+      setLocationStatus('unavailable');
+      return false;
+    } finally {
+      locationInProgress.current = false;
+      setLocating(false);
+    }
   };
   const locateOnStartup = useEffectEvent(locate);
 
@@ -264,7 +278,7 @@ export default function WeatherApp() {
   }
 
   return (
-    <main className="weather-app" data-theme={theme} data-weather-kind={condition.kind}><PwaRegister /><InstallPrompt /><ThemeColor color={theme === 'light' ? '#e9f5ff' : statusBarColorFor(forecast.current.weatherCode, forecast.current.isDay)} />
+    <main className="weather-app" data-theme={theme} data-weather-kind={condition.kind}><PwaRegister /><InstallPrompt /><ThemeColor color={settingsOpen ? (theme === 'light' ? '#f5f8f6' : '#102c32') : theme === 'light' ? '#e9f5ff' : statusBarColorFor(forecast.current.weatherCode, forecast.current.isDay)} />
       {theme === 'dark' && <WeatherBackdrop forecast={forecast} />}
       {photo && failedPhotoUrl !== photo.url && <picture className={`weather-photo${photoVisible ? ' is-loaded' : ''}`}><img src={photo.url} alt="" loading="lazy" decoding="async" fetchPriority="low" onLoad={() => setLoadedPhotoUrl(photo.url)} onError={() => setFailedPhotoUrl(photo.url)} /></picture>}
       {(theme === 'dark' || photoVisible) && <div className="weather-overlay" aria-hidden="true" />}
@@ -329,7 +343,27 @@ export default function WeatherApp() {
       </section>
 
       {searchOpen && <SearchPanel onSelect={choosePlace} onClose={() => setSearchOpen(false)} />}
-      {settingsOpen && <div className="drawer-backdrop" onClick={() => setSettingsOpen(false)}><aside className="settings-drawer" aria-label={t("Einstellungen")} onClick={(event) => event.stopPropagation()}><div className="drawer-title"><h2>{t("Einstellungen")}</h2><IconButton label={t("Menü schließen")} onClick={() => setSettingsOpen(false)}><X /></IconButton></div><fieldset className="theme-setting"><legend>{t("Darstellung")}</legend><div>{(["dark", "light"] as const).map((option) => <button key={option} type="button" aria-pressed={theme === option} onClick={() => setAppTheme(option)}>{option === "dark" ? t("Dunkel") : t("Hell")}</button>)}</div></fieldset><label className="photo-setting"><input type="checkbox" aria-label={t("Wetterfotos anzeigen")} checked={photosEnabled} onChange={(event) => setWeatherPhotosEnabled(event.target.checked)} /><span><strong>{t("Wetterfotos anzeigen")}</strong><small>{t("Bilder von Wikimedia Commons. Dabei werden IP-Adresse, Ortsname und Wetterlage übertragen.")}</small></span></label><label className="language-setting"><span>{t("Sprache")}</span><select value={preference} onChange={(event) => setLanguage(event.target.value)}><option value="auto">{t("Automatisch (Browser)")}</option><option value="de">Deutsch</option><option value="en">English</option></select></label>{savedPlaces.length > 0 && <section className="saved-places-settings" aria-labelledby="saved-places-title"><h3 id="saved-places-title">{t("Gespeicherte Orte")}</h3>{savedPlaces.map((saved) => <div key={saved.id}><button className="saved-place-name" onClick={() => { choosePlace(saved); setSettingsOpen(false); }}>{saved.id.startsWith('geo:') ? <LocateFixed aria-hidden="true" /> : <MapPin aria-hidden="true" />}<span>{saved.name}</span></button><button className="remove-place" aria-label={t('{{name}} entfernen', { name: saved.name })} onClick={() => removePlace(saved.id)}><X aria-hidden="true" /></button></div>)}</section>}<p>{t("Standortzugriff erfolgt nur nach deiner Aktion. Die gewählten oder gerundeten Koordinaten gehen an Open‑Meteo und zur einmaligen Ortsbenennung an OpenStreetMap.")}</p><div className="location-default"><input id="geolocation-default" type="checkbox" aria-describedby="geolocation-default-help" checked={geolocationDefault} onChange={(event) => { if (event.target.checked) void locate(true); else disableGeolocation(); }} /><label htmlFor="geolocation-default"><strong>{t("GPS-Standort als Standard")}</strong><small id="geolocation-default-help">{t("Nach Aktivierung wird der Standort bei künftigen Starts automatisch aktualisiert.")}</small></label></div><fieldset><legend>{t("Koordinatengenauigkeit")}</legend>{(['exact', 'approximate', 'private'] as const).map((item) => <label key={item}><input type="radio" name="precision" value={item} checked={precision === item} onChange={() => { setPrecision(item); if (geolocationDefault) setLocationPrecisionDefault(item); }} /><span><strong>{item === 'exact' ? t("Exakt") : item === 'approximate' ? t("Ungefähr · ca. 1 km") : t("Privat · ca. 5 km")}</strong>{item === 'private' && <small>{t("Kann an Küsten und in Bergen die Prognose beeinflussen.")}</small>}</span></label>)}</fieldset><button className="primary-button" onClick={() => void locate(!geolocationDefault)}><LocateFixed />{geolocationDefault ? t("Standort aktualisieren") : t("Meinen Standort verwenden")}</button>{locationStatus && locationStatus !== 'allowed' && <p role="status">{t("Standortstatus:")} {t({ denied: "Zugriff verweigert", blocked: "Zugriff blockiert", unavailable: "Nicht verfügbar", timeout: "Zeitüberschreitung", inaccurate: "Standort zu ungenau" }[locationStatus])}</p>}<a className="secondary-link" href="/privacy">{t("Netzwerk & Datenschutz")}</a><button className="danger-button" onClick={() => { clearLocalData(); setAppTheme("dark", false); setWeatherPhotosEnabled(true, false); setLanguage('auto'); setSavedPlaces([]); setGeolocationDefaultState(false); setLocationStatus(null); setPrecision('private'); setPlace(hamburg); void load(hamburg); setSettingsOpen(false); }}>{t("Alle lokalen Daten löschen")}</button></aside></div>}
+      {settingsOpen && <SettingsPanel
+        theme={theme} photosEnabled={photosEnabled} savedPlaces={savedPlaces} placeId={place.id}
+        geolocationDefault={geolocationDefault} precision={precision} locating={locating} locationStatus={locationStatus}
+        onClose={() => setSettingsOpen(false)} onTheme={setAppTheme} onPhotos={setWeatherPhotosEnabled}
+        onChoosePlace={(saved) => { choosePlace(saved); setSettingsOpen(false); }} onRemovePlace={removePlace}
+        onSearch={() => { setSettingsOpen(false); setSearchOpen(true); }}
+        onGpsDefault={(enabled) => { if (enabled) void locate(true); else disableGeolocation(); }}
+        onPrecision={(next) => {
+          setPrecision(next);
+          if (geolocationDefault) {
+            setLocationPrecisionDefault(next);
+            if (place.id.startsWith('geo:')) void locate(false, next);
+          }
+        }}
+        onLocate={() => void locate(false)}
+        onReset={() => {
+          clearLocalData(); setAppTheme('dark', false); setWeatherPhotosEnabled(true, false);
+          setSavedPlaces([]); setGeolocationDefaultState(false); setLocationStatus(null); setPrecision('private');
+          setPlace(hamburg); void load(hamburg); setSettingsOpen(false);
+        }}
+      />}
     </main>
   );
 }

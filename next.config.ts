@@ -15,7 +15,7 @@ for (const value of [process.env.VITE_OPEN_METEO_URL, process.env.VITE_OPEN_METE
 }
 
 const securityHeaders = [
-  { key: 'Content-Security-Policy', value: `default-src 'self'; img-src 'self' data: https://maps.dwd.de https://tile.openstreetmap.org https://thumb.wikimedia.org https://upload.wikimedia.org; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src ${[...connectionOrigins].join(' ')}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests` },
+  { key: 'Content-Security-Policy', value: `default-src 'self'; img-src 'self' data: blob: https://maps.dwd.de https://tile.openstreetmap.org https://thumb.wikimedia.org https://upload.wikimedia.org; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src ${[...connectionOrigins].join(' ')}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests` },
   { key: 'Permissions-Policy', value: 'geolocation=(self), camera=(), microphone=(), payment=(), usb=()' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },

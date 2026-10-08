@@ -48,13 +48,22 @@ export function readLastPlace(): Place | null {
   }
 }
 
+/** Keep the latest GPS position first, without changing the order of searched places. */
+function orderSavedPlaces(places: Place[]): Place[] {
+  const gps = places.filter((place) => place.id.startsWith('geo:')).at(-1);
+  const searched = places.filter((place) => !place.id.startsWith('geo:'));
+  return gps
+    ? [gps, ...searched.slice(-(MAX_SAVED_PLACES - 1))]
+    : searched.slice(-MAX_SAVED_PLACES);
+}
+
 export function readSavedPlaces(): Place[] {
   const raw = readStoredValue(SAVED_PLACES_KEY);
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) throw new Error('Invalid places');
-    return parsed.filter(isPlace).slice(0, MAX_SAVED_PLACES);
+    return orderSavedPlaces(parsed.filter(isPlace));
   } catch {
     removeStoredValue(SAVED_PLACES_KEY);
     return [];
@@ -67,7 +76,7 @@ export function rememberPlace(place: Place): Place[] {
     || (candidate.id.startsWith('geo:') && place.id.startsWith('geo:')));
   if (existingIndex >= 0) places[existingIndex] = place;
   else places.push(place);
-  const saved = places.slice(-MAX_SAVED_PLACES);
+  const saved = orderSavedPlaces(places);
   writeStoredValue(SAVED_PLACES_KEY, JSON.stringify(saved));
   return saved;
 }
