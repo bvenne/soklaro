@@ -105,7 +105,6 @@ function SearchPanel({ onSelect, onClose }: { onSelect: (place: Place) => void; 
     <dialog ref={dialog} className="search-panel" aria-labelledby="search-title" onCancel={event => { event.preventDefault(); onClose(); }}>
       <div className="search-head"><IconButton label={t("Suche schließen")} onClick={onClose}><ArrowLeft /></IconButton><h2 id="search-title">{t("Ort suchen")}</h2></div>
       <label className="search-box"><Search aria-hidden="true" /><span className="sr-only">{t("Stadt oder Ort")}</span><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Stadt oder Ort")} /><button aria-label={t("Eingabe löschen")} onClick={() => setQuery('')}><X /></button></label>
-      <p className="search-privacy">{t("Die Suche überträgt nur deinen Suchbegriff an Open‑Meteo. Keine Werbung, kein Profiling.")}</p>
       <div className="search-results" aria-live="polite">
         {busy && <p>{t("Suche läuft …")}</p>}
         {!busy && query.length >= 2 && results.length === 0 && <p>{t("Kein passender Ort gefunden.")}</p>}
@@ -438,7 +437,16 @@ export default function WeatherApp() {
             </details>;
           })}
         </section>
-        <footer className="app-footer"><p>{t("Wetterdaten:")} <a href="https://open-meteo.com/" rel="noreferrer">Open‑Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="noreferrer">CC BY 4.0</a> {t("· Ortsnamen bei GPS-Nutzung: ©")} <a href="https://www.openstreetmap.org/copyright" rel="noreferrer">{t("OpenStreetMap-Mitwirkende")}</a>.</p><nav aria-label={t("Rechtliches")}><a href="./privacy/">{t("Datenschutz")}</a><a href="./impressum/">{t("Impressum")}</a></nav></footer>
+        <footer className="app-footer">
+          <div>
+            <p>{t('Wetterdaten:')} <a href="https://open-meteo.com/" rel="noreferrer">Open‑Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="noreferrer">CC BY 4.0</a></p>
+            <p>{t('Ortsnamen bei GPS-Nutzung:')} © <a href="https://www.openstreetmap.org/copyright" rel="noreferrer">{t('OpenStreetMap-Mitwirkende')}</a>.</p>
+          </div>
+          <nav aria-label={t('Rechtliches')}>
+            <a href="./privacy/">{t('Datenschutz')}</a>
+            <a href="./impressum/">{t('Impressum')}</a>
+          </nav>
+        </footer>
       </section>}
 
       {searchOpen && <SearchPanel onSelect={choosePlace} onClose={closeSearch} />}

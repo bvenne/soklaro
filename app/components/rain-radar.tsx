@@ -63,6 +63,7 @@ export default function RainRadar({
     place.latitude > 55 ||
     place.longitude < 5.5 ||
     place.longitude > 15.5;
+  const initialZoom = outside ? 7 : 9;
   const selected = nearestRadarFrame(times, target);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 15000);
@@ -95,7 +96,7 @@ export default function RainRadar({
           maxZoom: 12,
         }).setView(
           outside ? [51, 10] : [place.latitude, place.longitude],
-          outside ? 6 : 8,
+          initialZoom,
         );
         map.current = instance;
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -150,7 +151,7 @@ export default function RainRadar({
       map.current = null;
       visibleLayer.current = null;
     };
-  }, [place.latitude, place.longitude, place.name, outside]);
+  }, [place.latitude, place.longitude, place.name, outside, initialZoom]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -365,7 +366,7 @@ export default function RainRadar({
           onClick={() =>
             map.current?.setView(
               outside ? [51, 10] : [place.latitude, place.longitude],
-              outside ? 6 : 8,
+              initialZoom,
             )
           }
         >

@@ -1,19 +1,52 @@
 'use client';
+
 import { useLocale } from '@/lib/i18n/use-locale';
 import { SoklaroMark } from '../components/soklaro-mark';
 
-
-
 export default function PrivacyPage() {
   const { t } = useLocale();
-  return <main className="privacy-page"><header><a className="brand-mark" href="./"><span><SoklaroMark /></span>soklaro</a><nav><a href="./impressum/">{t("Impressum")}</a><a href="./app/">{t("Wetter öffnen")}</a></nav></header><p className="eyebrow">{t("Stand 26. September 2026")}</p><h1>{t("Netzwerk &")}<br />{t("Datenschutz")}</h1><p>{t("soklaro ist 100 % werbe- und trackerfrei. Das bedeutet nicht, dass bei Online-Wetterabrufen gar keine Daten übertragen werden. Diese Seite führt die erlaubten Verbindungen und ihren Zweck vollständig auf.")}</p>
-<h2>{t("Erlaubte externe Hosts")}</h2><ul className="host-list"><li><code>api.open-meteo.com</code><span>{t("Wetterprognosen. Übertragen werden IP-Adresse sowie gewählte oder gerundete Koordinaten.")}</span></li><li><code>geocoding-api.open-meteo.com</code><span>{t("Ortssuche. Übertragen werden IP-Adresse und der eingegebene Suchbegriff.")}</span></li><li><code>nominatim.openstreetmap.org</code><span>{t("Einmalige Benennung eines bewusst freigegebenen GPS-Standorts. Übertragen werden IP-Adresse sowie die zuvor gewählten oder gerundeten Koordinaten.")}</span></li><li><code>commons.wikimedia.org</code><span>{t("Wetterfoto-Suche. Übertragen werden IP-Adresse, Ortsname und Wetterlage, aber keine GPS-Koordinaten.")}</span></li><li><code>thumb.wikimedia.org / upload.wikimedia.org</code><span>{t("Das ausgewählte Foto wird als verkleinertes Bild geladen. Dabei erhält Wikimedia deine IP-Adresse.")}</span></li></ul><p>{t("Bei konfigurierter Kunden- oder Self-Hosting-Instanz werden die Open‑Meteo-Hosts durch die ausdrücklich konfigurierte Basis-URL ersetzt. Es gibt keine externen Schrift-, Analytics-, Werbe- oder JavaScript-CDN-Verbindungen.")}</p>
-    <h2>{t("Regenradar")}</h2><p>{t("Beim Öffnen des Regenradars werden Kartenbilder von maps.dwd.de und tile.openstreetmap.org geladen. Dabei erhalten die Anbieter deine IP-Adresse und den angezeigten Kartenausschnitt. Vor dem Öffnen erfolgt keine Verbindung zu diesen Diensten.")}</p><p>{t("Die Radardaten stammen vom Deutschen Wetterdienst (CC BY 4.0). Die Hintergrundkarte stammt von OpenStreetMap. Es gelten die")} <a href="https://operations.osmfoundation.org/policies/tiles/">{t("Karten-Nutzungsbedingungen")}</a>.</p>
-    <h2>{t("Wetterfotos")}</h2><p>{t("Wenn Wetterfotos aktiviert sind, sucht soklaro nach einem frei lizenzierten Foto für den Ortsnamen und die aktuelle Wetterlage bei Wikimedia Commons. Die Bilddatei lädt direkt von Wikimedia. Dabei erhält Wikimedia deine IP-Adresse; exakte Koordinaten werden nicht übertragen. Du kannst Wetterfotos in den Einstellungen ausschalten. Ohne passenden Treffer oder offline bleibt der bisherige Hintergrund.")}</p><p>{t("Urheber, Quelle, Lizenz und Bildausschnitt stehen direkt beim angezeigten Foto. Die Auswahl ist eine Illustration und keine aktuelle Aufnahme des Wetters.")}</p>
-    <h2>Open‑Meteo</h2><p>{t("Die öffentliche API erhält technisch deine IP-Adresse und die abgefragten Koordinaten. Open‑Meteo erklärt, Protokolldaten für bis zu 90 Tage aufzubewahren. Der Standard-Build nutzt die öffentliche API ausschließlich nichtkommerziell; kommerzielle Betreiber müssen einen Kunden-Proxy oder eine selbst gehostete Instanz konfigurieren. Maßgeblich sind die")} <a href="https://open-meteo.com/en/terms" rel="noreferrer">{t("Bedingungen von Open‑Meteo")}</a>{t(". soklaro sendet diese Daten nicht an Werbepartner.")}</p>
-    <h2>{t("Standort")}</h2><p>{t("Bei aktiviertem GPS fragt die App beim Start nach deinem Standort. Nach deiner Freigabe verwendet sie standardmäßig exakte Koordinaten und speichert den Ort auf deinem Gerät. In den Einstellungen kannst du GPS ausschalten oder die Koordinaten auf etwa 1 km oder 5 km runden. Zur Ortsbenennung verwendet die App den öffentlichen Nominatim-Dienst von OpenStreetMap; maßgeblich sind dessen")} <a href="https://operations.osmfoundation.org/policies/nominatim/" rel="noreferrer">{t("Nutzungsregeln")}</a>{t(". Der ermittelte Ort wird lokal als letzter Ort gespeichert und nicht bei jedem Start neu abgefragt.")}</p>
-    <h2>{t("Lokale Daten")}</h2><p>{t("Favoriten, benutzerdefinierte Namen, Einheiten, Sprache, Einstellungen und die letzte erfolgreiche Prognose werden ausschließlich auf deinem Gerät gespeichert. „Alle lokalen Daten löschen“ im App-Menü entfernt diese Werte sofort. soklaro setzt keine Cookies.")}</p>
-    <h2>{t("Selbst hosten")}</h2><p>{t("Setze")} <code>VITE_OPEN_METEO_URL</code> {t("und")} <code>VITE_OPEN_METEO_GEOCODING_URL</code> {t("auf die HTTPS-Basis-URLs deiner Open‑Meteo-Instanz und baue die App neu. Geheime API-Schlüssel dürfen nicht in Client-Variablen oder das Repository geschrieben werden. Kundenendpunkte mit Geheimnissen benötigen einen eigenen serverseitigen Proxy.")}</p>
-    <h2>{t("Nicht enthalten")}</h2><p>{t("Keine Werbung, Analytics, Telemetrie, Tracking-Pixel, Session-Replays, Fingerprinting-, Crash-Reporting-, Social-Media- oder Marketing-SDKs. Keine Nutzerkonten, Cloud-Synchronisierung, externen Fonts oder ungefragten Push-Benachrichtigungen.")}</p>
-  </main>;
+  return (
+    <main className="privacy-page">
+      <header>
+        <a className="brand-mark" href="./" aria-label={t('soklaro Startseite')}>
+          <span><SoklaroMark /></span>soklaro
+        </a>
+        <nav>
+          <a href="./impressum/">{t('Impressum')}</a>
+          <a href="./app/">{t('Wetter öffnen')}</a>
+        </nav>
+      </header>
+      <h1>{t('Netzwerk &')}<br />{t('Datenschutz')}</h1>
+      <p>{t('Die Web-App wird statisch ausgeliefert. Dein Browser fragt Wetterdaten und weitere Inhalte direkt bei den jeweiligen Diensten ab.')}</p>
+
+      <h2>{t('Wetter, Ortssuche und GPS')}</h2>
+      <ul className="host-list">
+        <li><code>api.open-meteo.com</code><span>{t('Wetterprognosen. Übertragen werden IP-Adresse sowie gewählte oder gerundete Koordinaten.')}</span></li>
+        <li><code>geocoding-api.open-meteo.com</code><span>{t('Ortssuche. Übertragen werden IP-Adresse, Suchbegriff und Sprache.')}</span></li>
+        <li><code>nominatim.openstreetmap.org</code><span>{t('Nach GPS-Freigabe ermittelt Nominatim den Ortsnamen aus den Koordinaten. Der Dienst erhält auch deine IP-Adresse und Sprache.')}</span></li>
+      </ul>
+      <p>{t('GPS ist beim Start standardmäßig aktiv. Nach deiner Freigabe nutzt die App standardmäßig exakte Koordinaten. In den Einstellungen kannst du GPS abschalten oder die Koordinaten runden.')}</p>
+      <p>
+        {t('Andere Installationen können eigene Wetter- und Suchendpunkte verwenden. Die kostenlose Open‑Meteo-API ist für nichtkommerzielle Nutzung vorgesehen.')}
+        {' '}<a href="https://open-meteo.com/en/terms" rel="noreferrer">{t('Bedingungen von Open‑Meteo')}</a>
+        {' · '}<a href="https://operations.osmfoundation.org/policies/nominatim/" rel="noreferrer">{t('Nominatim-Nutzungsregeln')}</a>
+      </p>
+
+      <h2>{t('Regenradar')}</h2>
+      <p>{t('Beim Öffnen des Radars erhalten maps.dwd.de und tile.openstreetmap.org deine IP-Adresse und den angezeigten Kartenausschnitt.')}</p>
+      <p>
+        {t('Radardaten: Deutscher Wetterdienst (CC BY 4.0). Hintergrundkarte: OpenStreetMap.')}
+        {' '}<a href="https://operations.osmfoundation.org/policies/tiles/" rel="noreferrer">{t('Karten-Nutzungsbedingungen')}</a>
+      </p>
+
+      <h2>{t('Wetterfotos')}</h2>
+      <ul className="host-list">
+        <li><code>commons.wikimedia.org</code><span>{t('Bei aktiven Wetterfotos übermittelt die App Ortsname, Wetterlage und IP-Adresse für die Bildsuche.')}</span></li>
+        <li><code>thumb.wikimedia.org / upload.wikimedia.org</code><span>{t('Liefert bei einem Treffer das Foto. Es dient als Illustration. Quelle und Lizenz stehen am Bild.')}</span></li>
+      </ul>
+
+      <h2>{t('Lokale Daten')}</h2>
+      <p>{t('Ortsliste, Prognosen und Einstellungen werden im Browser gespeichert. Du kannst sie in den Einstellungen löschen. Gespeicherte Prognosen sind auch offline verfügbar. Für neue Daten braucht die App eine Verbindung.')}</p>
+    </main>
+  );
 }

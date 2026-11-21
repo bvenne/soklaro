@@ -1,9 +1,11 @@
 import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() =>
-    localStorage.setItem('soklaro:language', 'en'),
-  );
+  await page.addInitScript(() => {
+    localStorage.setItem('soklaro:language', 'en');
+    localStorage.setItem('soklaro:geolocation-default', 'false');
+    localStorage.setItem('soklaro:pwa-install-prompt-seen', 'true');
+  });
   await page.route(
     /api\.open-meteo\.com|geocoding-api\.open-meteo\.com|commons\.wikimedia\.org/,
     (route) => route.abort(),
@@ -32,7 +34,7 @@ test('landing page exposes the privacy-first weather flow', async ({
 test('network and privacy view lists every default external host', async ({
   page,
 }) => {
-  await page.goto('/privacy');
+  await page.goto('/privacy/');
   for (const host of [
     'api.open-meteo.com',
     'geocoding-api.open-meteo.com',
@@ -70,6 +72,33 @@ test('local CSS preserves the two-column details and full-width mobile day perio
     expect(boxes[index].y).toBeGreaterThan(boxes[index - 1].y);
   }
   await expect(page.locator('.hourly small[hidden]').first()).toBeHidden();
+});
+
+test('hour tiles stay inside their day while scrolling past midnight', async ({ page }) => {
+  await page.setViewportSize({ width: 393, height: 852 });
+  await page.goto('/app/');
+  const hourly = page.locator('.hourly');
+  await expect(hourly.locator('.hourly-day').nth(1)).toBeVisible();
+  const days = await hourly.evaluate(async (scroller) => {
+    const groups = [...scroller.querySelectorAll<HTMLElement>('.hourly-day')];
+    scroller.scrollLeft += groups[1].getBoundingClientRect().left
+      - scroller.getBoundingClientRect().left - 110;
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    return groups.map((group) => ({
+      headingRight: group.querySelector('.hourly-date')!.getBoundingClientRect().right,
+      first: group.querySelector('article')!.getBoundingClientRect().left,
+      last: group.querySelector('article:last-child')!.getBoundingClientRect().right,
+      right: group.getBoundingClientRect().right,
+    }));
+  });
+  for (let index = 0; index < days.length - 1; index++) {
+    expect(days[index].last).toBeLessThanOrEqual(days[index].right + 1);
+    expect(days[index].last).toBeLessThan(days[index + 1].first);
+    expect(days[index].headingRight).toBeLessThan(days[index + 1].first);
+  }
+  expect(days[1].first).toBeGreaterThan(0);
+  expect(days[1].first).toBeLessThan(393);
 });
 
 test('settings controls and both themes work without a CSS framework', async ({

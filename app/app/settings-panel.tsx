@@ -99,10 +99,7 @@ export function SettingsPanel(props: SettingsPanelProps) {
     >
       <div className="settings-surface">
         <header className="drawer-title">
-          <div>
-            <h2 id="settings-title">{t('Einstellungen')}</h2>
-            <p>{t('Dein Wetter. Deine Vorlieben.')}</p>
-          </div>
+          <h2 id="settings-title">{t('Einstellungen')}</h2>
           <button
             type="button"
             className="settings-close"
@@ -227,7 +224,6 @@ export function SettingsPanel(props: SettingsPanelProps) {
             >
               <span>
                 <strong>{t('Wetterfotos anzeigen')}</strong>
-                <small>{t('Passende Bilder zu Ort und Wetter.')}</small>
               </span>
               <input
                 id="settings-photos"
@@ -413,11 +409,6 @@ export function SettingsPanel(props: SettingsPanelProps) {
               </button>
             )}
           </section>
-          <p className="settings-save-note">
-            {t(
-              'Einstellungen werden automatisch auf diesem Gerät gespeichert.',
-            )}
-          </p>
         </div>
       </div>
     </dialog>

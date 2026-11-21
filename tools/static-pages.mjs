@@ -11,7 +11,7 @@ const base = env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, '');
 const template = await readFile(join(out, 'index.html'), 'utf8');
 const escape = text => text.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
 const routes = [
-  ['/', '/app/page.tsx', 'soklaro – Wetter ohne Tracking', 'Das Wetter für deinen Ort – nicht dein Standort für Werbenetzwerke.'],
+  ['/', '/app/page.tsx', 'soklaro – Wetter ohne Tracking', 'Lokale Wettervorhersage und Regenradar. Werbefrei und ohne Konto.'],
   ['/app', null, 'Dein Wetter · soklaro', 'Wetter, Regenradar und 14-Tage-Ausblick für deinen Ort.'],
   ['/privacy', '/app/privacy/content.tsx', 'Netzwerk & Datenschutz · soklaro', 'Alle Netzwerkverbindungen und lokalen Daten von soklaro.'],
   ['/impressum', '/app/impressum/content.tsx', 'Impressum · soklaro', 'Anbieter- und Kontaktangaben für soklaro.'],

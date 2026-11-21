@@ -2,8 +2,6 @@
 import { useLocale } from '@/lib/i18n/use-locale';
 import { SoklaroMark } from '../components/soklaro-mark';
 
-
-
 export default function ImprintPage() {
   const { t } = useLocale();
   return (
@@ -24,8 +22,6 @@ export default function ImprintPage() {
             <address>
         <strong>{t("Bastian Vennemann")}</strong><br /> {t("Lerchenstr. 104 ")}<br /> {t("25462 Rellingen ")}<br /> {t("Germany")} </address>
 
-      <h2>{t("Hinweis zum Projektstatus")}</h2>
-      <p>{t("soklaro befindet sich noch in der Entwicklung. ")}</p>
     </main>
   );
 }

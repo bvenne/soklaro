@@ -1,11 +1,17 @@
 import { expect, test, type Page } from '@playwright/test';
 
+const corsHeaders = { 'access-control-allow-origin': '*' };
+
 const pixel = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==',
   'base64',
 );
 
 async function mockRadar(page: Page, delayFuture = false) {
+  await page.addInitScript(() => {
+    localStorage.setItem('soklaro:geolocation-default', 'false');
+    localStorage.setItem('soklaro:pwa-install-prompt-seen', 'true');
+  });
   const reference = Math.floor(Date.now() / 300000) * 300000;
   const start = reference - 2 * 3600000,
     end = reference + 2 * 3600000;
@@ -26,6 +32,7 @@ async function mockRadar(page: Page, delayFuture = false) {
     if (url.searchParams.get('request') === 'GetCapabilities') {
       await route.fulfill({
         status: 200,
+        headers: corsHeaders,
         contentType: 'text/xml',
         body: capabilities,
       });
@@ -34,6 +41,7 @@ async function mockRadar(page: Page, delayFuture = false) {
       if (delayFuture && time > reference + 30 * 60000) await futureReady;
       await route.fulfill({
         status: 200,
+        headers: corsHeaders,
         contentType: 'image/png',
         body: pixel,
       });
@@ -56,6 +64,10 @@ test('loads radar only on demand and reuses images and layer-specific metadata',
   expect(requests).toEqual([]);
   await page.locator('.radar-trigger').click();
   await waitForRadar(page);
+  await expect(page.locator('.leaflet-tile').first()).toHaveAttribute(
+    'src',
+    /tile[.]openstreetmap[.]org\/9\//,
+  );
   expect(
     requests.filter((url) => url.includes('GetCapabilities')),
   ).toHaveLength(1);
@@ -133,6 +145,7 @@ test('recovers from an image error through refresh instead of remaining stuck lo
       if (fail)
         await route.fulfill({
           status: 503,
+          headers: corsHeaders,
           contentType: 'text/plain',
           body: 'Unavailable',
         });
@@ -169,6 +182,7 @@ test('renders green and yellow source rain as blue while keeping dry and no-data
   await page.route(/maps\.dwd\.de\/geoserver\/ows\?.*request=GetMap/, (route) =>
     route.fulfill({
       status: 200,
+      headers: corsHeaders,
       contentType: 'image/png',
       body: Buffer.from(fixture, 'base64'),
     }),
