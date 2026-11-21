@@ -25,8 +25,8 @@ export function useLocale() {
     document.documentElement.lang = locale;
     document.documentElement.dir = 'ltr';
     const path = document.documentElement.dataset.page || location.pathname.replace(/\/$/, '');
-    const title = path === '/privacy' ? 'Netzwerk & Datenschutz' : path === '/impressum' ? 'Impressum' : 'Dein Wetter';
-    document.title = `${translate(title, locale)} · soklaro`;
+    const title = path === '/privacy' ? 'Netzwerk & Datenschutz' : path === '/impressum' ? 'Impressum' : null;
+    document.title = title ? `${translate(title, locale)} · soklaro` : 'soklaro';
   }, [locale]);
   return {
     locale,

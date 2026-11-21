@@ -127,6 +127,11 @@ export function readCachedForecast(placeId: string): { forecast: WeatherForecast
 }
 
 export function clearLocalData(): void {
-  try { if (typeof localStorage !== 'undefined') localStorage.clear(); }
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('soklaro:')) localStorage.removeItem(key);
+    }
+  }
   catch { /* Browser storage may be inaccessible. */ }
 }

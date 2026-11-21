@@ -1,5 +1,5 @@
 {
-  "name": "soklaro – Wetter ohne Tracking",
+  "name": "soklaro",
   "short_name": "soklaro",
   "description": "Freie, werbe- und trackerfreie Wetter-App.",
   "start_url": "./app/",

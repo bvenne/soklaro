@@ -24,7 +24,7 @@ const renderer = await createServer({ mode: 'production', server: { middlewareMo
 try {
   for (const [route, module, title, description] of routes) {
     const content = module ? renderToString(createElement((await renderer.ssrLoadModule(module)).default)) : '';
-    const head = `<title>${escape(title)}</title>
+    const head = `<title>${route === '/' || route === '/app' ? 'soklaro' : escape(title)}</title>
       <meta name="description" content="${escape(description)}">
       ${base ? `<link rel="canonical" href="${escape(base + route)}">` : ''}
       <meta property="og:type" content="website">

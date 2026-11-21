@@ -65,8 +65,8 @@ function WeatherBackdrop({ forecast }: { forecast: WeatherForecast }) {
   );
 }
 
-function IconButton({ label, children, onClick }: { label: string; children: React.ReactNode; onClick?: () => void }) {
-  return <button className="icon-button" aria-label={label} title={label} onClick={onClick}>{children}</button>;
+function IconButton({ label, children, onClick, buttonRef }: { buttonRef?: React.Ref<HTMLButtonElement>; label: string; children: React.ReactNode; onClick?: () => void }) {
+  return <button ref={buttonRef} className="icon-button" aria-label={label} title={label} onClick={onClick}>{children}</button>;
 }
 
 function SearchPanel({ onSelect, onClose }: { onSelect: (place: Place) => void; onClose: () => void }) {
@@ -74,17 +74,35 @@ function SearchPanel({ onSelect, onClose }: { onSelect: (place: Place) => void; 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Place[]>([]);
   const [busy, setBusy] = useState(false);
-  const controller = useRef<AbortController | null>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    if (query.trim().length < 2) { setResults([]); return; }
+    const element = dialog.current!;
+    element.showModal();
+    return () => element.close();
+  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    const valid = query.trim().length >= 2;
+    setResults([]);
+    setBusy(valid);
+    if (!valid) return;
     const timer = setTimeout(async () => {
-      controller.current?.abort(); controller.current = new AbortController(); setBusy(true);
-      try { setResults(await geocodingProvider.search(query, controller.current.signal)); } catch { setResults([]); } finally { setBusy(false); }
+      try {
+        const matches = await geocodingProvider.search(query, controller.signal);
+        if (!controller.signal.aborted) setResults(matches);
+      } catch {
+        if (!controller.signal.aborted) setResults([]);
+      } finally {
+        if (!controller.signal.aborted) setBusy(false);
+      }
     }, 250);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [query, locale]);
   return (
-    <div className="search-panel" role="dialog" aria-modal="true" aria-labelledby="search-title">
+    <dialog ref={dialog} className="search-panel" aria-labelledby="search-title" onCancel={event => { event.preventDefault(); onClose(); }}>
       <div className="search-head"><IconButton label={t("Suche schließen")} onClick={onClose}><ArrowLeft /></IconButton><h2 id="search-title">{t("Ort suchen")}</h2></div>
       <label className="search-box"><Search aria-hidden="true" /><span className="sr-only">{t("Stadt oder Ort")}</span><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Stadt oder Ort")} /><button aria-label={t("Eingabe löschen")} onClick={() => setQuery('')}><X /></button></label>
       <p className="search-privacy">{t("Die Suche überträgt nur deinen Suchbegriff an Open‑Meteo. Keine Werbung, kein Profiling.")}</p>
@@ -93,7 +111,7 @@ function SearchPanel({ onSelect, onClose }: { onSelect: (place: Place) => void; 
         {!busy && query.length >= 2 && results.length === 0 && <p>{t("Kein passender Ort gefunden.")}</p>}
         {results.map((place) => <button key={place.id} onClick={() => onSelect(place)}><MapPin aria-hidden="true" /><span><strong>{place.name}</strong><small>{[place.admin, place.country].filter(Boolean).join(', ')}</small></span></button>)}
       </div>
-    </div>
+    </dialog>
   );
 }
 
@@ -125,6 +143,10 @@ function WeatherIcon({ code, isDay = true, theme, sunShowers = false }: { code: 
   return <Icon aria-hidden="true" />;
 }
 
+function hasGpsPlaceholder(place: Place) {
+  return place.id.startsWith('geo:') && (place.name === 'Dein Standort' || place.name === 'Your location');
+}
+
 export default function WeatherApp() {
   const { t, locale, number } = useLocale();
   const theme = useAppTheme();
@@ -145,7 +167,8 @@ export default function WeatherApp() {
   const [requestFailure, setRequestFailure] = useState<WeatherFailure | null>(null);
   const [locationStatus, setLocationStatus] = useState<GeolocationResult['status'] | null>(null);
   const [locating, setLocating] = useState(false);
-  const locationInProgress = useRef(false);
+  const gpsRequest = useRef<AbortController | null>(null);
+  const searchTrigger = useRef<HTMLButtonElement>(null);
   const activeRequest = useRef<AbortController | null>(null);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
 
@@ -169,41 +192,90 @@ export default function WeatherApp() {
     }
   };
 
-  const choosePlace = (next: Place) => {
+  const cancelGps = () => {
+    gpsRequest.current?.abort();
+    gpsRequest.current = null;
+    setLocating(false);
+  };
+
+  const openSearch = () => {
+    if (!history.state?.soklaroSearch) history.pushState({ ...history.state, soklaroSearch: true }, '');
+    setSearchOpen(true);
+  };
+
+  useEffect(() => {
+    const syncSearch = () => {
+      const open = Boolean(history.state?.soklaroSearch);
+      setSearchOpen(open);
+      if (!open) requestAnimationFrame(() => searchTrigger.current?.focus());
+    };
+    setSearchOpen(Boolean(history.state?.soklaroSearch));
+    window.addEventListener('popstate', syncSearch);
+    return () => window.removeEventListener('popstate', syncSearch);
+  }, []);
+
+  const closeSearch = () => {
+    if (history.state?.soklaroSearch) history.back();
+    setSearchOpen(false);
+    requestAnimationFrame(() => searchTrigger.current?.focus());
+  };
+
+  const displayPlace = (next: Place) => {
+    const cached = readCachedForecast(next.id);
+    if (cached) setForecast(cached.forecast);
     saveLastPlace(next);
     setSavedPlaces(rememberPlace(next));
     setPlace(next);
-    setSearchOpen(false);
     void load(next);
   };
 
+  const choosePlace = (next: Place) => {
+    cancelGps();
+    if (searchOpen) closeSearch();
+    displayPlace(next);
+  };
+
   const locate = async (makeDefault = false, requestedPrecision = precision): Promise<boolean> => {
-    if (locationInProgress.current) return false;
-    locationInProgress.current = true;
+    cancelGps();
+    const controller = new AbortController();
+    gpsRequest.current = controller;
     setLocating(true);
-    try {
     setLocationStatus(null);
-    const result = await requestLocation();
-    setLocationStatus(result.status);
-    if (result.status !== 'allowed') return false;
-    if (makeDefault) {
-      setGeolocationDefault(true);
-      setLocationPrecisionDefault(requestedPrecision);
-      setGeolocationDefaultState(true);
-    }
-    const coordinates = roundCoordinates(result.coordinates, requestedPrecision);
-    let namedPlace: Pick<Place, 'name' | 'admin' | 'country'> = { name: t("Dein Standort") };
     try {
-      namedPlace = await reverseGeocode(coordinates) ?? namedPlace;
-    } catch { /* Die Wetterabfrage funktioniert auch, wenn die Ortsbenennung nicht erreichbar ist. */ }
-    choosePlace({ id: `geo:${coordinates.latitude},${coordinates.longitude}`, ...namedPlace, ...coordinates });
-    return true;
+      const result = await requestLocation();
+      if (controller.signal.aborted) return true;
+      setLocationStatus(result.status);
+      if (result.status !== 'allowed') return false;
+      if (makeDefault) {
+        setGeolocationDefault(true);
+        setLocationPrecisionDefault(requestedPrecision);
+        setGeolocationDefaultState(true);
+      }
+      const coords = roundCoordinates(result.coordinates, requestedPrecision);
+      const id = `geo:${coords.latitude},${coords.longitude}`;
+      const gpsPlace = readSavedPlaces().find(saved => saved.id === id) ?? { id, ...coords, name: "Dein Standort" };
+      displayPlace(gpsPlace);
+      setLocating(false);
+      // The place name is optional. Weather starts as soon as coordinates are available.
+      try {
+        const name = await reverseGeocode(coords, controller.signal);
+        if (name && !controller.signal.aborted) {
+          const namedPlace = { ...gpsPlace, ...name };
+          setPlace(namedPlace);
+          saveLastPlace(namedPlace);
+          setSavedPlaces(rememberPlace(namedPlace));
+        }
+      } catch { /* Keep the current GPS label when the lookup fails. */ }
+      return true;
     } catch {
+      if (controller.signal.aborted) return true;
       setLocationStatus('unavailable');
       return false;
     } finally {
-      locationInProgress.current = false;
-      setLocating(false);
+      if (gpsRequest.current === controller) {
+        gpsRequest.current = null;
+        setLocating(false);
+      }
     }
   };
   const locateOnStartup = useEffectEvent(locate);
@@ -216,6 +288,7 @@ export default function WeatherApp() {
   };
 
   const disableGeolocation = () => {
+    cancelGps();
     setGeolocationDefault(false);
     setLocationPrecisionDefault(null);
     setGeolocationDefaultState(false);
@@ -232,9 +305,7 @@ export default function WeatherApp() {
     }
     if (placeId !== place.id) return;
     const next = remaining[0] ?? hamburg;
-    saveLastPlace(next);
-    setPlace(next);
-    void load(next);
+    choosePlace(next);
   };
 
   useEffect(() => {
@@ -258,6 +329,7 @@ export default function WeatherApp() {
       void locateOnStartup(false, storedPrecision).then((located) => { if (!located) void load(initialPlace); });
     } else void load(initialPlace);
     return () => {
+      gpsRequest.current?.abort();
       window.clearInterval(clockInterval);
       activeRequest.current?.abort();
     };
@@ -265,16 +337,25 @@ export default function WeatherApp() {
   useEffect(() => { const offline = () => setStatus('offline'); window.addEventListener('offline', offline); return () => window.removeEventListener('offline', offline); }, []);
 
   const condition = interpretWmo(forecast.current.weatherCode);
+  const localizedPlace = (saved: Place) => hasGpsPlaceholder(saved) ? { ...saved, name: t('Dein Standort') } : saved;
+  const currentPlace = localizedPlace(place);
   const photo = useWeatherPhoto(place, condition.kind, forecast.current.isDay,
-    photosEnabled && forecast.place.id === place.id && forecast.source !== 'mock');
+    photosEnabled && !hasGpsPlaceholder(place) && forecast.place.id === place.id && forecast.source !== 'mock');
   const photoVisible = photo !== null && loadedPhotoUrl === photo.url && failedPhotoUrl !== photo.url;
   const insight = clock ? deriveInsight(forecast, localIsoMinute(clock, forecast.timezone)) : '';
   const today = forecast.daily.find((day) => clock && day.date === localIsoMinute(clock, forecast.timezone).slice(0, 10)) ?? forecast.daily[0];
   const sunPosition = clock ? sunProgress(today, localIsoMinute(clock, forecast.timezone)) : null;
   const time = forecast.current.time.slice(11, 16);
-  const updated = forecast.current.time.slice(11, 16);
+  const waitingForPlace = forecast.place.id !== place.id || (forecast.source === 'mock' && !requestFailure);
+  const localHour = clock ? localIsoMinute(clock, forecast.timezone).slice(0, 13) : '';
+  const loaded = new Date(forecast.updatedAt);
+  const loadedTime = Number.isFinite(loaded.getTime()) ? localIsoMinute(loaded, forecast.timezone) : '';
   const localDate = clock ? localIsoMinute(clock, forecast.timezone).slice(0, 10) : forecast.current.time.slice(0, 10);
   const tomorrow = new Date(Date.parse(localDate + 'T00:00:00Z') + 86400000).toISOString().slice(0, 10);
+  const yesterday = new Date(Date.parse(localDate + 'T00:00:00Z') - 86400000).toISOString().slice(0, 10);
+  const loadedDay = loadedTime.slice(0, 10);
+  const loadedDateLabel = loadedDay === localDate ? t('Heute') : loadedDay === yesterday ? t('Gestern') :
+    loadedTime ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: forecast.timezone }).format(loaded) : '';
   const hourlyDays = new Map<string, typeof forecast.hourly>();
   for (const hour of forecast.hourly) {
     const date = hour.time.slice(0, 10);
@@ -288,30 +369,32 @@ export default function WeatherApp() {
 
   return (
     <main className="weather-app" data-theme={theme} data-weather-kind={condition.kind}><PwaRegister /><InstallPrompt /><ThemeColor color={settingsOpen ? (theme === 'light' ? '#f5f8f6' : '#102c32') : theme === 'light' ? '#e9f5ff' : statusBarColorFor(forecast.current.weatherCode, forecast.current.isDay)} />
-      {theme === 'dark' && <WeatherBackdrop forecast={forecast} />}
+      {theme === 'dark' && !waitingForPlace && <WeatherBackdrop forecast={forecast} />}
       {photo && failedPhotoUrl !== photo.url && <picture className={`weather-photo${photoVisible ? ' is-loaded' : ''}`}><img src={photo.url} alt="" loading="lazy" decoding="async" fetchPriority="low" onLoad={() => setLoadedPhotoUrl(photo.url)} onError={() => setFailedPhotoUrl(photo.url)} /></picture>}
       {(theme === 'dark' || photoVisible) && <div className="weather-overlay" aria-hidden="true" />}
-      <header className="app-header"><a className="brand-mark" href="./" aria-label={t("soklaro Startseite")}><span><SoklaroMark /></span>soklaro</a><nav><IconButton label={t("Ort suchen")} onClick={() => setSearchOpen(true)}><Search /></IconButton><IconButton label={t("Menü öffnen")} onClick={() => setSettingsOpen(true)}><Menu /></IconButton></nav></header>
+      <header className="app-header"><a className="brand-mark" href="./" aria-label={t("soklaro Startseite")}><span><SoklaroMark /></span>soklaro</a><nav><IconButton buttonRef={searchTrigger} label={t("Ort suchen")} onClick={openSearch}><Search /></IconButton><IconButton label={t("Menü öffnen")} onClick={() => setSettingsOpen(true)}><Menu /></IconButton></nav></header>
       {(status === 'offline' || status === 'error') && <div className="status-banner" role="status">{requestFailure ? `${t(failureMessages[requestFailure])} ${forecast.source === 'cache' ? t('Gespeicherte Prognose wird angezeigt.') : t('Beispieldaten werden angezeigt.')}` : t("Offline – zuletzt gespeicherte oder Beispieldaten")}</div>}
       <section className="weather-hero" aria-labelledby="place-name" onTouchStart={(event) => { const touch = event.touches[0]; swipeStart.current = { x: touch.clientX, y: touch.clientY }; }} onTouchEnd={(event) => { const start = swipeStart.current; const touch = event.changedTouches[0]; swipeStart.current = null; if (!start) return; const x = touch.clientX - start.x; const y = touch.clientY - start.y; if (Math.abs(x) >= 60 && Math.abs(x) > Math.abs(y) * 1.25) switchPlace(x < 0 ? 1 : -1); }}>
-        <div className="place-row"><div><p className="eyebrow">{t("Dein Wetter")}</p><div className="place-title">{place.id.startsWith('geo:') && <LocateFixed aria-label={t("Per GPS ermittelter Ort")} />}<h1 id="place-name">{place.name}</h1></div><p>{time} · {t(condition.label)}</p></div><IconButton label={t("Wetter aktualisieren")} onClick={() => void load()}><RefreshCw className={status === 'loading' ? 'spinning' : ''} /></IconButton></div>
-        {savedPlaces.length > 1 && <nav className="place-switcher" aria-label={t("Gespeicherte Orte")} onTouchStart={(event) => event.stopPropagation()} onTouchEnd={(event) => event.stopPropagation()}>{savedPlaces.map((saved) => <button key={saved.id} aria-current={saved.id === place.id ? 'location' : undefined} onClick={() => choosePlace(saved)}>{saved.id.startsWith('geo:') ? <LocateFixed aria-hidden="true" /> : <MapPin aria-hidden="true" />}{saved.name}</button>)}</nav>}
+        <div className="place-row"><div><p className="eyebrow">{t("Dein Wetter")}</p><div className="place-title">{place.id.startsWith('geo:') && <LocateFixed aria-label={t("Per GPS ermittelter Ort")} />}<h1 id="place-name">{currentPlace.name}</h1></div>{!waitingForPlace && <p>{time} · {t(condition.label)}</p>}</div><IconButton label={t("Wetter aktualisieren")} onClick={() => void load()}><RefreshCw className={status === 'loading' ? 'spinning' : ''} /></IconButton></div>
+        {savedPlaces.length > 1 && <nav className="place-switcher" aria-label={t("Gespeicherte Orte")} onTouchStart={(event) => event.stopPropagation()} onTouchEnd={(event) => event.stopPropagation()}>{savedPlaces.map((saved) => <button key={saved.id} aria-current={saved.id === place.id ? 'location' : undefined} onClick={() => choosePlace(saved)}>{saved.id.startsWith('geo:') ? <LocateFixed aria-hidden="true" /> : <MapPin aria-hidden="true" />}{localizedPlace(saved).name}</button>)}</nav>}
+        {waitingForPlace ? <p role="status">{t('Wetter für {{place}} wird geladen …', { place: currentPlace.name })}</p> : <>
         <div className="temperature" aria-label={t('{{temperature}} Grad Celsius', { temperature: number(forecast.current.temperature) })}><span>{Math.round(forecast.current.temperature)}</span><sup>°</sup></div>
         <p className="feels">{t("Gefühlt")} {Math.round(forecast.current.apparentTemperature)}{t("° · H")} {Math.round(today.temperatureMax)}{t("° / T")} {Math.round(today.temperatureMin)}°</p>
         <div className="insight-actions"><div className="insight">{insight.startsWith('Regen wahrscheinlich') ? <CloudRain aria-hidden="true" /> : <CloudSun aria-hidden="true" />}<strong>{t(insight)}</strong></div><button className="radar-trigger" aria-label={t('Regenradar öffnen')} title={t('Regenradar öffnen')} aria-haspopup="dialog" onClick={() => setRadarOpen(true)}><Radar aria-hidden="true" /></button></div>
-        <p className="updated">{t("Aktualisiert")} {updated} · {forecast.source === 'live' ? t("Open‑Meteo Live-Daten") : forecast.source === 'cache' ? t("gespeicherte Daten") : t("Beispieldaten")}</p>
+        <p className="updated">{forecast.source !== 'mock' && loadedTime && <>{t('Zuletzt geladen')}: <time dateTime={forecast.updatedAt}>{loadedDateLabel}, {loadedTime.slice(11, 16)}</time> · </>}{forecast.source === 'live' ? t("Open‑Meteo Live-Daten") : forecast.source === 'cache' ? t("gespeicherte Daten") : t("Beispieldaten")}</p>
+        </>}
         {photo && photoVisible && <footer className="photo-credit">{t("Foto:")} <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer">{photo.artist} · Wikimedia Commons</a> · <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer">{photo.license}</a> · {t("Bildausschnitt")}</footer>}
       </section>
 
-      {radarOpen && <Suspense fallback={<p role="status">{t('Radar wird geöffnet …')}</p>}><RainRadar place={place} onClose={() => setRadarOpen(false)} /></Suspense>}
-      <section className="forecast-content">
+      {radarOpen && <Suspense fallback={<p role="status">{t('Radar wird geöffnet …')}</p>}><RainRadar place={currentPlace} onClose={() => setRadarOpen(false)} /></Suspense>}
+      {!waitingForPlace && <section className="forecast-content">
         <div className="section-heading"><div><p className="eyebrow">{t("Nächste Stunden")}</p><h2>{t("Der Tag im Blick")}</h2></div><p>{t("48 Stunden")}</p></div>
         <div className="hourly" tabIndex={0} aria-label={t("Horizontale 48-Stunden-Prognose")}>
           {Array.from(hourlyDays, ([date, hours]) => (
             <section className="hourly-day" key={date}>
               <h3 className="hourly-date"><time dateTime={date}>{date === localDate ? t('Heute') : date === tomorrow ? t('Morgen') : new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' }).format(new Date(date + 'T12:00:00Z'))}</time></h3>
               <div className="hourly-hours">
-          {hours.map((hour, index) => { const summary = hourSummary(hour); return <article key={`${hour.time}-${index}`} className={hour === forecast.hourly[0] ? 'now' : ''}><time>{hour === forecast.hourly[0] ? t("Jetzt") : hour.time.slice(11, 16)}</time><span className="weather-glyph" role="img" aria-label={t(summary.label)} title={t(summary.label)} data-weather-kind={interpretWmo(summary.code).kind}><WeatherIcon code={summary.code} isDay={hour.isDay} theme={theme} /></span><strong>{Math.round(hour.temperature)}°</strong><small>{hour.precipitationProbability}%</small>{hour.isDay && hour.sunshineDuration != null && <small hidden title={t("Sonnenschein in der Stunde ab der angezeigten Uhrzeit")}>☀ {Math.round(hour.sunshineDuration / 60)} min</small>}</article>; })}
+          {hours.map((hour, index) => { const summary = hourSummary(hour); return <article key={`${hour.time}-${index}`} className={hour.time.slice(0, 13) === localHour ? 'now' : ''}><time>{hour.time.slice(0, 13) === localHour ? t("Jetzt") : hour.time.slice(11, 16)}</time><span className="weather-glyph" role="img" aria-label={t(summary.label)} title={t(summary.label)} data-weather-kind={interpretWmo(summary.code).kind}><WeatherIcon code={summary.code} isDay={hour.isDay} theme={theme} /></span><strong>{Math.round(hour.temperature)}°</strong><small>{hour.precipitationProbability}%</small>{hour.isDay && hour.sunshineDuration != null && <small hidden title={t("Sonnenschein in der Stunde ab der angezeigten Uhrzeit")}>☀ {Math.round(hour.sunshineDuration / 60)} min</small>}</article>; })}
               </div>
             </section>
           ))}
@@ -327,13 +410,13 @@ export default function WeatherApp() {
         <div className="sun-card"><div><Sunrise aria-hidden="true" /><small>{t("Sonnenaufgang")}</small><strong>{today.sunrise.slice(11, 16)}</strong></div><div className="sun-arc" aria-hidden="true"><svg viewBox="0 0 200 90" preserveAspectRatio="none"><path d="M10 80 Q100 -60 190 80" fill="none" stroke="currentColor" strokeDasharray="3 4" /></svg>{sunPosition !== null && <Sun className="sun-position" style={{ left: `${5 + 90 * sunPosition}%`, top: `${(80 - 280 * sunPosition * (1 - sunPosition)) / 90 * 100}%` }} />}</div><div><Sunset aria-hidden="true" /><small>{t("Sonnenuntergang")}</small><strong>{today.sunset.slice(11, 16)}</strong></div></div>
         <section className="days">
           <div className="section-heading"><div><p className="eyebrow">{t("Ausblick")}</p><h2>{t("14 Tage")}</h2></div></div>
-          {forecast.daily.map((day, index) => {
+          {forecast.daily.map((day) => {
             const summary = daySummary(day);
             const periods = periodSummaries(day.date, forecast.detailHourly ?? forecast.hourly);
             const value = (amount: number | null, unit: string, digits = 0) => amount == null ? '—' : `${number(amount, digits)}${unit}`;
             return <details className="day-forecast" key={`${forecast.place.id}-${day.date}`}>
               <summary className="day-toggle">
-                <time dateTime={day.date}>{index === 0 ? t("Heute") : new Intl.DateTimeFormat(locale, { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' }).format(new Date(`${day.date}T12:00:00Z`))}</time>
+                <time dateTime={day.date}>{day.date === localDate ? t("Heute") : new Intl.DateTimeFormat(locale, { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' }).format(new Date(`${day.date}T12:00:00Z`))}</time>
                 <span className="daily-condition" role="img" aria-label={t(summary.label)} title={`${t(summary.label)} · ${t('Stärkstes Tagesereignis')}: ${t(interpretWmo(day.weatherCode).label)}`} ><WeatherIcon code={summary.code} theme={theme} sunShowers={summary.label === 'Sonne und Schauer'} /><small>{t(summary.label)}</small></span>
                 <span className="daily-metrics"><small title={t("Regenwahrscheinlichkeit")}><CloudRain aria-hidden="true" />{day.precipitationProbability}%</small><small title={t("Erwartete Niederschlagsmenge")}><Droplets aria-hidden="true" />{number(day.precipitationSum, 1)} mm</small><small title={t("Sonnenscheindauer")}><Sun aria-hidden="true" />{number(day.sunshineDuration / 3600, 1)} h</small></span>
                 <strong>{Math.round(day.temperatureMax)}° <em>{Math.round(day.temperatureMin)}°</em></strong>
@@ -356,15 +439,15 @@ export default function WeatherApp() {
           })}
         </section>
         <footer className="app-footer"><p>{t("Wetterdaten:")} <a href="https://open-meteo.com/" rel="noreferrer">Open‑Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="noreferrer">CC BY 4.0</a> {t("· Ortsnamen bei GPS-Nutzung: ©")} <a href="https://www.openstreetmap.org/copyright" rel="noreferrer">{t("OpenStreetMap-Mitwirkende")}</a>.</p><nav aria-label={t("Rechtliches")}><a href="./privacy/">{t("Datenschutz")}</a><a href="./impressum/">{t("Impressum")}</a></nav></footer>
-      </section>
+      </section>}
 
-      {searchOpen && <SearchPanel onSelect={choosePlace} onClose={() => setSearchOpen(false)} />}
+      {searchOpen && <SearchPanel onSelect={choosePlace} onClose={closeSearch} />}
       {settingsOpen && <SettingsPanel
-        theme={theme} photosEnabled={photosEnabled} savedPlaces={savedPlaces} placeId={place.id}
+        theme={theme} photosEnabled={photosEnabled} savedPlaces={savedPlaces.map(localizedPlace)} placeId={place.id}
         geolocationDefault={geolocationDefault} precision={precision} locating={locating} locationStatus={locationStatus}
         onClose={() => setSettingsOpen(false)} onTheme={setAppTheme} onPhotos={setWeatherPhotosEnabled}
         onChoosePlace={(saved) => { choosePlace(saved); setSettingsOpen(false); }} onRemovePlace={removePlace}
-        onSearch={() => { setSettingsOpen(false); setSearchOpen(true); }}
+        onSearch={() => { setSettingsOpen(false); openSearch(); }}
         onGpsDefault={(enabled) => { if (enabled) void locate(true); else disableGeolocation(); }}
         onPrecision={(next) => {
           setPrecision(next);
@@ -375,6 +458,7 @@ export default function WeatherApp() {
         }}
         onLocate={() => void locate(false)}
         onReset={() => {
+          cancelGps();
           clearLocalData(); setAppTheme('dark', false); setWeatherPhotosEnabled(true, false);
           setSavedPlaces([]); setGeolocationDefaultState(readGeolocationDefault()); setLocationStatus(null); setPrecision(readLocationPrecisionDefault());
           setPlace(hamburg); void load(hamburg); setSettingsOpen(false);

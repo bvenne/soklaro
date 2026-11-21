@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { forgetPlace, readGeolocationDefault, readLastPlace, readLocationPrecisionDefault, readSavedPlaces, rememberPlace, saveLastPlace, setGeolocationDefault, setLocationPrecisionDefault } from './cache';
+import { clearLocalData, forgetPlace, readGeolocationDefault, readLastPlace, readLocationPrecisionDefault, readSavedPlaces, rememberPlace, saveLastPlace, setGeolocationDefault, setLocationPrecisionDefault } from './cache';
 import { berlin, hamburg } from './mock';
 
 describe('last selected place', () => {
@@ -18,6 +18,14 @@ describe('last selected place', () => {
   });
 
   afterEach(() => vi.unstubAllGlobals());
+
+  it('clears only soklaro data on shared hosts', () => {
+    saveLastPlace(berlin);
+    localStorage.setItem('other-app:language', 'de');
+    rememberPlace(hamburg);
+    clearLocalData();
+    expect([...values]).toEqual([['other-app:language', 'de']]);
+  });
 
   it('restores the last selected place', () => {
     saveLastPlace(berlin);
