@@ -3,15 +3,12 @@ import { interpretWmo } from '@/lib/weather/wmo';
 const cloudShape = 'M17 43h30a9 9 0 0 0 0-18h-2a13 13 0 0 0-24-3 10.5 10.5 0 0 0-4 21Z';
 
 function Snowflake({ x, y, size = 1 }: { x: number; y: number; size?: number }) {
+  const shape = 'M0-7V7M-6-3.5l12 7M-6 3.5l12-7M-2-5l2 2 2-2M-2 5l2-2 2 2';
   return (
-    <path
-      d="M0-7V7M-6-3.5l12 7M-6 3.5l12-7M-2-5l2 2 2-2M-2 5l2-2 2 2"
-      transform={`translate(${x} ${y}) scale(${size})`}
-      stroke="#277893"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+    <g transform={`translate(${x} ${y}) scale(${size})`} strokeLinecap="round" strokeLinejoin="round">
+      <path d={shape} stroke="#616d74" strokeWidth="4" />
+      <path d={shape} stroke="#fff" strokeWidth="2.4" />
+    </g>
   );
 }
 
@@ -87,7 +84,7 @@ export function ColorWeatherIcon({
         </>
       )}
       {kind === 'snow' && (code === 77 ? (
-        <path d="m21 44 3 3-3 3-3-3Zm11 4 3 3-3 3-3-3Zm11-4 3 3-3 3-3-3Zm-20 9 3 3-3 3-3-3Zm17 0 3 3-3 3-3-3Z" fill="#4687a0" />
+        <path d="m21 44 3 3-3 3-3-3Zm11 4 3 3-3 3-3-3Zm11-4 3 3-3 3-3-3Zm-20 9 3 3-3 3-3-3Zm17 0 3 3-3 3-3-3Z" fill="#fff" stroke="#616d74" strokeWidth="1.5" strokeLinejoin="round" />
       ) : (
         <>
           <Snowflake x={22} y={52} />

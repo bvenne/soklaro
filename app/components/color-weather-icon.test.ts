@@ -24,3 +24,10 @@ it('shows a moon at night and adds sunshine to showers when the forecast indicat
   expect(renderIcon(2, false)).not.toBe(renderIcon(2));
   expect(renderIcon(80, true, true)).not.toBe(renderIcon(80));
 });
+
+it('draws white snow in flakes, grains and showers', () => {
+  for (const code of [71, 73, 75, 85, 86]) {
+    expect(renderIcon(code)).toContain('stroke="#fff"');
+  }
+  expect(renderIcon(77)).toContain('fill="#fff"');
+});
