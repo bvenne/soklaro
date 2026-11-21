@@ -3,10 +3,10 @@ import { hourSummary } from './hour-summary';
 import { interpretWmo } from './wmo';
 
 const periods = [
+  { name: 'Night', start: 0, end: 6, range: '00–06 Uhr' },
   { name: 'Morning', start: 6, end: 12, range: '06–12 Uhr' },
   { name: 'Noon', start: 12, end: 18, range: '12–18 Uhr' },
   { name: 'Evening', start: 18, end: 24, range: '18–24 Uhr' },
-  { name: 'Night', start: 24, end: 30, range: '00–06 Uhr · Folgetag' },
 ];
 
 export function periodSummaries(date: string, hourly: WeatherPoint[]) {
