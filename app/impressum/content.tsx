@@ -9,8 +9,8 @@ export default function ImprintPage() {
   return (
     <main className="privacy-page imprint-page">
       <header>
-        <a className="brand-mark" href="/" aria-label={t("soklaro Startseite")}><span><SoklaroMark /></span>soklaro</a>
-        <nav><a href="/privacy">{t("Datenschutz")}</a><a href="/app">{t("Wetter öffnen")}</a></nav>
+        <a className="brand-mark" href="./" aria-label={t("soklaro Startseite")}><span><SoklaroMark /></span>soklaro</a>
+        <nav><a href="./privacy/">{t("Datenschutz")}</a><a href="./app/">{t("Wetter öffnen")}</a></nav>
       </header>
       <p className="eyebrow">{t("Rechtliche Angaben")}</p>
       <h1>{t("Impressum")}</h1>

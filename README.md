@@ -17,10 +17,10 @@ npm run dev
 
 ## Veröffentlichung auf Synology (DSM 7.2+)
 
-1. Auf dem Entwicklungsrechner im Branch `static` bei einer eigenen Testdomain in der Datei `.env.local` die Zeile `NEXT_PUBLIC_SITE_URL=https://wetter.deine-domain.de` mit dem tatsächlichen Hostnamen hinterlegen. Standard ist `https://soklaro.com`. Dann `npm ci` und `npm run build` ausführen.
-2. Den **Inhalt von `dist/web/`** in einen eigenen Webordner auf dem NAS kopieren, beispielsweise `web/soklaro`. Die Datei `index.html` muss direkt darin liegen. Der Gruppe `http` Leserechte für den Ordner geben.
-3. In **Web Station → Webdienst** eine statische Website mit diesem Dokumentenstamm einrichten. Unter **Webportal** den Dienst einem eigenen Hostnamen zuweisen. DNS und das HTTPS-Zertifikat für diesen Host konfigurieren. Die App erwartet die Domainwurzel. Für den Paralleltest eignet sich eine eigene Subdomain.
-4. Im Browser die Domain und die direkten Pfade `/app/`, `/privacy/` und `/impressum/` öffnen. Auf iOS über „Teilen → Zum Home-Bildschirm“ installieren. Nach einem ersten vollständigen Online-Start die Wetteransicht im Flugmodus erneut öffnen. Live-Prognosen, Karten und Radar brauchen eine Verbindung.
+1. Auf dem Entwicklungsrechner im Branch `static` mit `npm ci` und `npm run build` bauen. Dieselben Dateien funktionieren an der Domainwurzel und in einem Unterordner.
+2. Für die LAN-Adresse `https://192.168.178.100/soklaro/app/` den Inhalt von `dist/web/` nach `web/soklaro/` kopieren. In Web Station muss der Webdienst für diese IP den **übergeordneten Ordner `web/`** ausliefern. Die Gruppe `http` braucht Leserechte. Ist stattdessen `web/soklaro/` selbst der Dokumentenstamm, lautet der Pfad `/app/`.
+3. HTTPS mit einem vom Gerät als vertrauenswürdig anerkannten Zertifikat einrichten. Beim Aufruf über die LAN-IP muss diese IP als IP-Adresse im Subject Alternative Name des Zertifikats stehen.
+4. `/soklaro/` öffnet die Startseite, `/soklaro/app/` das Wetter. Auf iOS über „Teilen → Zum Home-Bildschirm“ hinzufügen. Nach einem vollständigen Online-Start im Flugmodus erneut öffnen. Live-Daten brauchen eine Verbindung. Eine öffentliche URL ist nur für die optionale Sitemap und kanonische Links nötig; dafür beim Build `NEXT_PUBLIC_SITE_URL` einschließlich Unterordner setzen.
 5. Für Updates zuerst die Dateien mit Versionskennung in `assets/`, dann Seiten und zuletzt `sw.js` übertragen. Vorherige Assets während des Übergangs behalten. HTML und `sw.js` beim Abruf revalidieren lassen. Die neue Offline-Version wird nach Schließen der alten App-Fenster aktiv.
 
 Auf dem NAS genügt Web Station. Bei vorgeschaltetem Proxy dort die Antwortheader `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy: same-origin` und `Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=(), usb=()` setzen. Die Beschränkungen für Skripte und Datenquellen sind in den HTML-Dateien enthalten.
@@ -63,7 +63,7 @@ Der Open‑Meteo-Endpunkt ist über `VITE_OPEN_METEO_URL` konfigurierbar. Geheim
 
 Das Standardprofil verwendet die öffentliche Open‑Meteo-API ausschließlich nichtkommerziell. Kommerzielle Releases müssen einen serverseitigen Kunden-Proxy oder eine selbst gehostete Instanz konfigurieren. Details: [docs/OPEN_METEO_USAGE.md](docs/OPEN_METEO_USAGE.md).
 
-Kanonische Domain und Quellcode-Repository werden über `NEXT_PUBLIC_SITE_URL` und `NEXT_PUBLIC_REPOSITORY_URL` gesetzt. Ohne echte HTTPS-Adressen zeigt die App keinen erfundenen Repository-Link an und `npm run release:check` verweigert die Freigabe.
+Die öffentliche Basis-URL für Suchmaschinen ist optional. Die Repository-Adresse kann über `NEXT_PUBLIC_REPOSITORY_URL` gesetzt werden.
 
 ## Datenschutz
 

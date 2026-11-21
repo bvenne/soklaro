@@ -372,7 +372,7 @@ export function SettingsPanel(props: SettingsPanelProps) {
           >
             <h3 id="settings-data-title">{t('Datenschutz & Daten')}</h3>
             {/* oxlint-disable-next-line nextjs/no-html-link-for-pages -- Shared with the standalone Capacitor build, without the Next router. */}
-            <a className="settings-privacy-link" href="/privacy">
+            <a className="settings-privacy-link" href="./privacy/">
               {t('Datenschutz')}
               <ChevronRight aria-hidden="true" />
             </a>

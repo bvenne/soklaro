@@ -48,7 +48,7 @@ export function interpretWmo(code: number): WeatherCondition {
 
 export function backgroundFor(code: number, isDay: boolean): string {
   const { kind } = interpretWmo(code);
-  return `/weather/${kind}-${isDay ? 'day' : 'night'}-1280.webp`;
+  return `./weather/${kind}-${isDay ? 'day' : 'night'}-1280.webp`;
 }
 
 const statusBarColors: Record<WeatherKind, [day: string, night: string]> = {

@@ -58,8 +58,8 @@ function WeatherBackdrop({ forecast }: { forecast: WeatherForecast }) {
   const period = forecast.current.isDay ? 'day' : 'night';
   return (
     <picture className="weather-backdrop" aria-hidden="true">
-      <source type="image/avif" srcSet={`/weather/${kind}-${period}-640.avif 640w, /weather/${kind}-${period}-1280.avif 1280w, /weather/${kind}-${period}-1920.avif 1920w`} sizes="100vw" />
-      <source type="image/webp" srcSet={`/weather/${kind}-${period}-640.webp 640w, /weather/${kind}-${period}-1280.webp 1280w, /weather/${kind}-${period}-1920.webp 1920w`} sizes="100vw" />
+      <source type="image/avif" srcSet={`./weather/${kind}-${period}-640.avif 640w, ./weather/${kind}-${period}-1280.avif 1280w, ./weather/${kind}-${period}-1920.avif 1920w`} sizes="100vw" />
+      <source type="image/webp" srcSet={`./weather/${kind}-${period}-640.webp 640w, ./weather/${kind}-${period}-1280.webp 1280w, ./weather/${kind}-${period}-1920.webp 1920w`} sizes="100vw" />
       <img src={backgroundFor(forecast.current.weatherCode, forecast.current.isDay)} alt="" fetchPriority="high" />
     </picture>
   );
@@ -282,7 +282,7 @@ export default function WeatherApp() {
       {theme === 'dark' && <WeatherBackdrop forecast={forecast} />}
       {photo && failedPhotoUrl !== photo.url && <picture className={`weather-photo${photoVisible ? ' is-loaded' : ''}`}><img src={photo.url} alt="" loading="lazy" decoding="async" fetchPriority="low" onLoad={() => setLoadedPhotoUrl(photo.url)} onError={() => setFailedPhotoUrl(photo.url)} /></picture>}
       {(theme === 'dark' || photoVisible) && <div className="weather-overlay" aria-hidden="true" />}
-      <header className="app-header"><a className="brand-mark" href="/" aria-label={t("soklaro Startseite")}><span><SoklaroMark /></span>soklaro</a><nav><IconButton label={t("Ort suchen")} onClick={() => setSearchOpen(true)}><Search /></IconButton><IconButton label={t("Menü öffnen")} onClick={() => setSettingsOpen(true)}><Menu /></IconButton></nav></header>
+      <header className="app-header"><a className="brand-mark" href="./" aria-label={t("soklaro Startseite")}><span><SoklaroMark /></span>soklaro</a><nav><IconButton label={t("Ort suchen")} onClick={() => setSearchOpen(true)}><Search /></IconButton><IconButton label={t("Menü öffnen")} onClick={() => setSettingsOpen(true)}><Menu /></IconButton></nav></header>
       {(status === 'offline' || status === 'error') && <div className="status-banner" role="status">{requestFailure ? `${t(failureMessages[requestFailure])} ${forecast.source === 'cache' ? t('Gespeicherte Prognose wird angezeigt.') : t('Beispieldaten werden angezeigt.')}` : t("Offline – zuletzt gespeicherte oder Beispieldaten")}</div>}
       <section className="weather-hero" aria-labelledby="place-name" onTouchStart={(event) => { const touch = event.touches[0]; swipeStart.current = { x: touch.clientX, y: touch.clientY }; }} onTouchEnd={(event) => { const start = swipeStart.current; const touch = event.changedTouches[0]; swipeStart.current = null; if (!start) return; const x = touch.clientX - start.x; const y = touch.clientY - start.y; if (Math.abs(x) >= 60 && Math.abs(x) > Math.abs(y) * 1.25) switchPlace(x < 0 ? 1 : -1); }}>
         <div className="place-row"><div><p className="eyebrow">{t("Dein Wetter")}</p><div className="place-title">{place.id.startsWith('geo:') && <LocateFixed aria-label={t("Per GPS ermittelter Ort")} />}<h1 id="place-name">{place.name}</h1></div><p>{time} · {t(condition.label)}</p></div><IconButton label={t("Wetter aktualisieren")} onClick={() => void load()}><RefreshCw className={status === 'loading' ? 'spinning' : ''} /></IconButton></div>
@@ -339,7 +339,7 @@ export default function WeatherApp() {
             </details>;
           })}
         </section>
-        <footer className="app-footer"><p>{t("Wetterdaten:")} <a href="https://open-meteo.com/" rel="noreferrer">Open‑Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="noreferrer">CC BY 4.0</a> {t("· Ortsnamen bei GPS-Nutzung: ©")} <a href="https://www.openstreetmap.org/copyright" rel="noreferrer">{t("OpenStreetMap-Mitwirkende")}</a>.</p><nav aria-label={t("Rechtliches")}><a href="/privacy">{t("Datenschutz")}</a><a href="/impressum">{t("Impressum")}</a></nav></footer>
+        <footer className="app-footer"><p>{t("Wetterdaten:")} <a href="https://open-meteo.com/" rel="noreferrer">Open‑Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="noreferrer">CC BY 4.0</a> {t("· Ortsnamen bei GPS-Nutzung: ©")} <a href="https://www.openstreetmap.org/copyright" rel="noreferrer">{t("OpenStreetMap-Mitwirkende")}</a>.</p><nav aria-label={t("Rechtliches")}><a href="./privacy/">{t("Datenschutz")}</a><a href="./impressum/">{t("Impressum")}</a></nav></footer>
       </section>
 
       {searchOpen && <SearchPanel onSelect={choosePlace} onClose={() => setSearchOpen(false)} />}

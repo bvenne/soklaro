@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
+    base: './',
     resolve: { alias: { '@': fileURLToPath(new URL('.', import.meta.url)) } },
     server: { port: 3000 },
     define: {

@@ -7,7 +7,7 @@ import { createServer, loadEnv } from 'vite';
 
 const out = 'dist/web';
 const env = loadEnv('production', process.cwd(), '');
-const base = new URL(env.NEXT_PUBLIC_SITE_URL || 'https://soklaro.com').origin;
+const base = env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, '');
 const template = await readFile(join(out, 'index.html'), 'utf8');
 const escape = text => text.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
 const routes = [
@@ -26,20 +26,20 @@ try {
     const content = module ? renderToString(createElement((await renderer.ssrLoadModule(module)).default)) : '';
     const head = `<title>${escape(title)}</title>
       <meta name="description" content="${escape(description)}">
-      <link rel="canonical" href="${base}${route}">
+      ${base ? `<link rel="canonical" href="${escape(base + route)}">` : ''}
       <meta property="og:type" content="website">
       <meta property="og:title" content="${escape(title)}">
       <meta property="og:description" content="${escape(description)}">
-      <meta property="og:image" content="${base}/og.png">`;
-    const html = template.replace('<head>', `<head><meta http-equiv="Content-Security-Policy" content="${escape(policy)}"><meta name="referrer" content="strict-origin-when-cross-origin">`)
+      <meta property="og:image" content="${base ? escape(base) + '/' : './'}og.png">`;
+    const html = template.replace('<html lang="de">', `<html lang="de" data-page="${route}">`).replace('<base href="/">', `<base href="${route === '/' ? './' : '../'}">`).replace('<head>', `<head><meta http-equiv="Content-Security-Policy" content="${escape(policy)}"><meta name="referrer" content="strict-origin-when-cross-origin">`)
       .replace(/<title>.*?<\/title>/, () => head).replace('<div id="root"></div>', () => `<div id="root">${content}</div>`);
     const file = join(out, route, 'index.html');
     await mkdir(dirname(file), { recursive: true });
     await writeFile(file, html);
   }
 } finally { await renderer.close(); }
-await writeFile(join(out, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${base}/sitemap.xml\n`);
-await writeFile(join(out, 'sitemap.xml'), `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${routes.map(([p]) => `<url><loc>${base}${p}</loc></url>`).join('')}</urlset>`);
+await writeFile(join(out, 'robots.txt'), `User-agent: *\nAllow: /\n${base ? `Sitemap: ${base}/sitemap.xml\n` : ''}`);
+if (base) await writeFile(join(out, 'sitemap.xml'), `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${routes.map(([p]) => `<url><loc>${base}${p}</loc></url>`).join('')}</urlset>`);
 
 // Only the app shell and two fallback images are installed for offline use.
 const files = [...routes.map(([p]) => (p === '/' ? '' : p) + '/index.html'), '/manifest.webmanifest', '/apple-touch-icon.png',

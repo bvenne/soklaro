@@ -575,7 +575,7 @@ export default function RainRadar({
           </a>{' '}
           · {t('Kartendarstellung angepasst')} ·{' '}
           {/* oxlint-disable-next-line nextjs/no-html-link-for-pages -- Shared with the standalone Capacitor build, without the Next router. */}
-          <a href="/privacy">{t('Datenschutz')}</a>
+          <a href="./privacy/">{t('Datenschutz')}</a>
         </p>
       </div>
     </dialog>

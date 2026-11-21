@@ -7,7 +7,7 @@ const pages = {
   '/privacy': () => import('./app/privacy/content'),
   '/impressum': () => import('./app/impressum/content'),
 };
-const path = location.pathname.replace(/\/$/, '') || '/';
+const path = document.documentElement.dataset.page || location.pathname.replace(/\/$/, '') || '/';
 const load = pages[path as keyof typeof pages];
 if (load) {
   void load().then(({ default: Page }) => createRoot(document.getElementById('root')!).render(<Page />));

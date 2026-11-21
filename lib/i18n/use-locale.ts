@@ -24,7 +24,7 @@ export function useLocale() {
   useEffect(() => {
     document.documentElement.lang = locale;
     document.documentElement.dir = 'ltr';
-    const path = location.pathname.replace(/\/$/, '');
+    const path = document.documentElement.dataset.page || location.pathname.replace(/\/$/, '');
     const title = path === '/privacy' ? 'Netzwerk & Datenschutz' : path === '/impressum' ? 'Impressum' : 'Dein Wetter';
     document.title = `${translate(title, locale)} · soklaro`;
   }, [locale]);

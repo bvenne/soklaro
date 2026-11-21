@@ -12,7 +12,7 @@ const requireUrl = (name, value, allowedHosts) => {
   } catch { failures.push(`${name} ist keine gültige URL.`); }
 };
 
-requireUrl('NEXT_PUBLIC_SITE_URL', process.env.NEXT_PUBLIC_SITE_URL);
+if (process.env.NEXT_PUBLIC_SITE_URL) requireUrl('NEXT_PUBLIC_SITE_URL', process.env.NEXT_PUBLIC_SITE_URL);
 requireUrl('NEXT_PUBLIC_REPOSITORY_URL', process.env.NEXT_PUBLIC_REPOSITORY_URL, ['github.com', 'gitlab.com', 'codeberg.org']);
 
 const mode = process.env.OPEN_METEO_USAGE_MODE;
