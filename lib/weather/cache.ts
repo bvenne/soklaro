@@ -9,9 +9,9 @@ const LOCATION_PRECISION_KEY = 'soklaro:location-precision';
 const MAX_SAVED_PLACES = 8;
 export const MAX_CACHE_AGE = 6 * 60 * 60 * 1000;
 
-function readStoredValue(key: string): string | null {
-  try { return typeof localStorage === 'undefined' ? null : localStorage.getItem(key); }
-  catch { return null; }
+function readStoredValue(key: string, unavailable: string | null = null): string | null {
+  try { return typeof localStorage === 'undefined' ? unavailable : localStorage.getItem(key); }
+  catch { return unavailable; }
 }
 
 function writeStoredValue(key: string, value: string): void {
@@ -92,7 +92,8 @@ export function setGeolocationDefault(enabled: boolean): void {
 }
 
 export function readGeolocationDefault(): boolean {
-  return readStoredValue(GEOLOCATION_DEFAULT_KEY) === 'true';
+  const saved = readStoredValue(GEOLOCATION_DEFAULT_KEY, 'false');
+  return saved === null || saved === 'true';
 }
 
 export function setLocationPrecisionDefault(precision: LocationPrecision | null): void {
@@ -101,7 +102,8 @@ export function setLocationPrecisionDefault(precision: LocationPrecision | null)
 }
 
 export function readLocationPrecisionDefault(): LocationPrecision {
-  const precision = readStoredValue(LOCATION_PRECISION_KEY);
+  const precision = readStoredValue(LOCATION_PRECISION_KEY, 'private');
+  if (precision === null) return 'exact';
   return precision === 'exact' || precision === 'approximate' || precision === 'private'
     ? precision
     : 'private';

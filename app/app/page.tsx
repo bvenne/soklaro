@@ -140,7 +140,7 @@ export default function WeatherApp() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savedPlaces, setSavedPlaces] = useState<Place[]>([]);
   const [geolocationDefault, setGeolocationDefaultState] = useState(false);
-  const [precision, setPrecision] = useState<LocationPrecision>('private');
+  const [precision, setPrecision] = useState<LocationPrecision>('exact');
   const [status, setStatus] = useState<'idle' | 'loading' | 'offline' | 'error'>('idle');
   const [requestFailure, setRequestFailure] = useState<WeatherFailure | null>(null);
   const [locationStatus, setLocationStatus] = useState<GeolocationResult['status'] | null>(null);
@@ -247,7 +247,7 @@ export default function WeatherApp() {
       ? storedPlaces
       : rememberPlace(initialPlace);
     const useGeolocation = readGeolocationDefault();
-    const storedPrecision = useGeolocation ? readLocationPrecisionDefault() : 'private';
+    const storedPrecision = readLocationPrecisionDefault();
     const cached = readCachedForecast(initialPlace.id);
     setPlace(initialPlace);
     setSavedPlaces(places);
@@ -273,6 +273,15 @@ export default function WeatherApp() {
   const sunPosition = clock ? sunProgress(today, localIsoMinute(clock, forecast.timezone)) : null;
   const time = forecast.current.time.slice(11, 16);
   const updated = forecast.current.time.slice(11, 16);
+  const localDate = clock ? localIsoMinute(clock, forecast.timezone).slice(0, 10) : forecast.current.time.slice(0, 10);
+  const tomorrow = new Date(Date.parse(localDate + 'T00:00:00Z') + 86400000).toISOString().slice(0, 10);
+  const hourlyDays = new Map<string, typeof forecast.hourly>();
+  for (const hour of forecast.hourly) {
+    const date = hour.time.slice(0, 10);
+    const group = hourlyDays.get(date);
+    if (group) group.push(hour);
+    else hourlyDays.set(date, [hour]);
+  }
   if (!mounted) {
     return <main className="weather-app app-boot" aria-busy="true"><div className="boot-mark" aria-hidden="true"><SoklaroMark /></div><p>{t("soklaro lädt das Wetter …")}</p></main>;
   }
@@ -298,7 +307,14 @@ export default function WeatherApp() {
       <section className="forecast-content">
         <div className="section-heading"><div><p className="eyebrow">{t("Nächste Stunden")}</p><h2>{t("Der Tag im Blick")}</h2></div><p>{t("48 Stunden")}</p></div>
         <div className="hourly" tabIndex={0} aria-label={t("Horizontale 48-Stunden-Prognose")}>
-          {forecast.hourly.map((hour, index) => { const summary = hourSummary(hour); return <article key={`${hour.time}-${index}`} className={index === 0 ? 'now' : ''}><time>{index === 0 ? t("Jetzt") : hour.time.slice(11, 16)}</time><span className="weather-glyph" role="img" aria-label={t(summary.label)} title={t(summary.label)} data-weather-kind={interpretWmo(summary.code).kind}><WeatherIcon code={summary.code} isDay={hour.isDay} theme={theme} /></span><strong>{Math.round(hour.temperature)}°</strong><small>{hour.precipitationProbability}%</small>{hour.isDay && hour.sunshineDuration != null && <small hidden title={t("Sonnenschein in der Stunde ab der angezeigten Uhrzeit")}>☀ {Math.round(hour.sunshineDuration / 60)} min</small>}</article>; })}
+          {Array.from(hourlyDays, ([date, hours]) => (
+            <section className="hourly-day" key={date}>
+              <h3 className="hourly-date"><time dateTime={date}>{date === localDate ? t('Heute') : date === tomorrow ? t('Morgen') : new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' }).format(new Date(date + 'T12:00:00Z'))}</time></h3>
+              <div className="hourly-hours">
+          {hours.map((hour, index) => { const summary = hourSummary(hour); return <article key={`${hour.time}-${index}`} className={hour === forecast.hourly[0] ? 'now' : ''}><time>{hour === forecast.hourly[0] ? t("Jetzt") : hour.time.slice(11, 16)}</time><span className="weather-glyph" role="img" aria-label={t(summary.label)} title={t(summary.label)} data-weather-kind={interpretWmo(summary.code).kind}><WeatherIcon code={summary.code} isDay={hour.isDay} theme={theme} /></span><strong>{Math.round(hour.temperature)}°</strong><small>{hour.precipitationProbability}%</small>{hour.isDay && hour.sunshineDuration != null && <small hidden title={t("Sonnenschein in der Stunde ab der angezeigten Uhrzeit")}>☀ {Math.round(hour.sunshineDuration / 60)} min</small>}</article>; })}
+              </div>
+            </section>
+          ))}
         </div>
         <div className="detail-grid">
           <DataPill icon={<Droplets />} label={t("Luftfeuchte")} value={`${forecast.current.humidity}%`} />
@@ -328,7 +344,7 @@ export default function WeatherApp() {
                   <h3>{t(period.name)}</h3><small className="period-time">{t(period.range)}</small>
                   <span className="period-symbol" role="img" aria-label={t(period.label)}><WeatherIcon code={period.code} isDay={period.isDay} theme={theme} /></span>
                   <p className="period-description">{t(period.label)}</p>
-                  <strong className="period-temperature">{value(period.temperatureMin, '°')} – {value(period.temperatureMax, '°')}</strong>
+                  <strong className="period-temperature">{value(period.temperatureMax, '°')} <em>{value(period.temperatureMin, '°')}</em></strong>
                   <dl>
                     <div><dt><CloudRain aria-hidden="true" />{t("Regenrisiko")}</dt><dd>{value(period.precipitationProbability, '%')}</dd></div>
                     <div><dt><Droplets aria-hidden="true" />{t("Niederschlag")}</dt><dd>{value(period.precipitation, ' mm', 1)}</dd></div>
@@ -360,7 +376,7 @@ export default function WeatherApp() {
         onLocate={() => void locate(false)}
         onReset={() => {
           clearLocalData(); setAppTheme('dark', false); setWeatherPhotosEnabled(true, false);
-          setSavedPlaces([]); setGeolocationDefaultState(false); setLocationStatus(null); setPrecision('private');
+          setSavedPlaces([]); setGeolocationDefaultState(readGeolocationDefault()); setLocationStatus(null); setPrecision(readLocationPrecisionDefault());
           setPlace(hamburg); void load(hamburg); setSettingsOpen(false);
         }}
       />}

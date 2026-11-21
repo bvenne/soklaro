@@ -2,7 +2,7 @@
 
 Das Wetter für deinen Ort – nicht dein Standort für Werbenetzwerke.
 
-soklaro ist eine freie, werbe- und trackerfreie Wetter-App für Web, PWA, iOS und Android. Sie nutzt standardmäßig Open‑Meteo, fragt den Gerätestandort erst nach einer bewussten Aktion ab und speichert Favoriten, Einstellungen sowie den letzten Forecast ausschließlich lokal.
+soklaro ist eine freie, werbe- und trackerfreie Wetter-App für Web, PWA, iOS und Android. Sie nutzt standardmäßig Open‑Meteo, fragt standardmäßig beim Start nach dem exakten Gerätestandort und verwendet ihn nach erteilter Freigabe und speichert Favoriten, Einstellungen sowie den letzten Forecast ausschließlich lokal.
 
 ## Lokal starten
 

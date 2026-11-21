@@ -138,6 +138,10 @@ button { cursor:pointer; }
 .section-heading h2 { margin:0;font-weight:430;font-size:clamp(1.8rem,4vw,3rem);letter-spacing:-.04em; }
 .section-heading>p { margin:0;opacity:.6;font-size:.8rem; }
 .hourly { display:flex;gap:.6rem;max-width:1200px;margin:0 auto;padding:.4rem 0 1.3rem;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:thin; }
+.hourly-day { flex:none; }
+.hourly-date { position:sticky;left:0;width:max-content;margin:0 0 .45rem;padding-inline:.45rem;font-weight:650; }
+.hourly .hourly-date time { font-size:.86rem;opacity:1; }
+.hourly-hours { display:flex;gap:.6rem; }
 .hourly article { flex:0 0 92px;min-height:168px;padding:1rem .65rem;border-top:1px solid rgba(255,255,255,.22);display:flex;flex-direction:column;align-items:center;gap:.8rem;scroll-snap-align:start; }
 .hourly article.now { background:rgba(255,255,255,.1);border-radius:999px;border-color:transparent; }
 .hourly time,.hourly small { font-size:.72rem;opacity:.68; }
@@ -202,7 +206,7 @@ button { cursor:pointer; }
 .daily-metrics small { display:flex;align-items:center;gap:.35rem;color:#d7f4c6;white-space:nowrap; }
 .daily-metrics svg { width:16px;height:16px;opacity:.8; }
 .days .day-toggle strong { text-align:right;font-size:1.05rem; }
-.days .day-toggle em { opacity:.48;font-style:normal;font-weight:400;margin-left:.6rem; }
+.days .day-toggle em,.period-temperature em { opacity:.48;font-style:normal;font-weight:400;margin-left:.6rem; }
 .app-footer { max-width:1200px;margin:5rem auto 0;padding-top:1.2rem;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:2rem;font-size:.73rem;opacity:.72; }
 .app-footer p { margin:0; }
 .app-footer nav,.privacy-page header nav { display:flex;flex-wrap:wrap;gap:1rem; }

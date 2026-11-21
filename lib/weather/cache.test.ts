@@ -80,7 +80,7 @@ describe('last selected place', () => {
   });
 
   it('persists whether geolocation is the default', () => {
-    expect(readGeolocationDefault()).toBe(false);
+    expect(readGeolocationDefault()).toBe(true);
     setGeolocationDefault(true);
     expect(readGeolocationDefault()).toBe(true);
     setGeolocationDefault(false);
@@ -88,13 +88,13 @@ describe('last selected place', () => {
   });
 
   it('persists a valid default geolocation precision and can forget it', () => {
-    expect(readLocationPrecisionDefault()).toBe('private');
+    expect(readLocationPrecisionDefault()).toBe('exact');
     setLocationPrecisionDefault('exact');
     expect(readLocationPrecisionDefault()).toBe('exact');
     setLocationPrecisionDefault('approximate');
     expect(readLocationPrecisionDefault()).toBe('approximate');
     setLocationPrecisionDefault(null);
-    expect(readLocationPrecisionDefault()).toBe('private');
+    expect(readLocationPrecisionDefault()).toBe('exact');
   });
 
   it('falls back safely for an invalid stored precision', () => {
