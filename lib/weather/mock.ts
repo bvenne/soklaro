@@ -13,8 +13,8 @@ export function mockForecast(place: Place = hamburg): WeatherForecast {
       time: time.toISOString().slice(0, 16), temperature, apparentTemperature: temperature - 0.8,
       weatherCode: index < 4 ? 2 : index < 9 ? 61 : 3, isDay: hour >= 6 && hour < 20,
       precipitation: index >= 4 && index < 9 ? 0.7 : 0, precipitationProbability: index >= 4 && index < 9 ? 72 : 18,
-      humidity: 64, dewPoint: 12, cloudCover: index < 4 ? 38 : 72, windSpeed: 14, windDirection: 236,
-      windGusts: index > 7 ? 35 : 27, pressure: 1014, visibility: 24_000, uvIndex: hour > 10 && hour < 17 ? 4.3 : 0,
+      humidity: 64, cloudCover: index < 4 ? 38 : 72, windSpeed: 14, windDirection: 236,
+      windGusts: index > 7 ? 35 : 27, pressure: 1014, uvIndex: hour > 10 && hour < 17 ? 4.3 : 0,
     };
   });
   return {

@@ -19,13 +19,11 @@ export type WeatherPoint = {
   precipitation: number;
   precipitationProbability: number;
   humidity: number;
-  dewPoint: number;
   cloudCover: number;
   windSpeed: number;
   windDirection: number;
   windGusts: number;
   pressure: number;
-  visibility: number;
   uvIndex: number;
 };
 

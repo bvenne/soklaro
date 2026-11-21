@@ -10,11 +10,22 @@ Voraussetzungen: Node.js 22.13 oder neuer.
 
 ```bash
 npm ci
-cp .env.example .env.local
 npm run dev
 ```
 
 Öffne die Landingpage unter `http://localhost:3000/` und die Wetter-App unter `http://localhost:3000/app`.
+
+## Veröffentlichung auf Synology (DSM 7.2+)
+
+1. Auf dem Entwicklungsrechner im Branch `static` bei einer eigenen Testdomain in der Datei `.env.local` die Zeile `NEXT_PUBLIC_SITE_URL=https://wetter.deine-domain.de` mit dem tatsächlichen Hostnamen hinterlegen. Standard ist `https://soklaro.com`. Dann `npm ci` und `npm run build` ausführen.
+2. Den **Inhalt von `dist/web/`** in einen eigenen Webordner auf dem NAS kopieren, beispielsweise `web/soklaro`. Die Datei `index.html` muss direkt darin liegen. Der Gruppe `http` Leserechte für den Ordner geben.
+3. In **Web Station → Webdienst** eine statische Website mit diesem Dokumentenstamm einrichten. Unter **Webportal** den Dienst einem eigenen Hostnamen zuweisen. DNS und das HTTPS-Zertifikat für diesen Host konfigurieren. Die App erwartet die Domainwurzel. Für den Paralleltest eignet sich eine eigene Subdomain.
+4. Im Browser die Domain und die direkten Pfade `/app/`, `/privacy/` und `/impressum/` öffnen. Auf iOS über „Teilen → Zum Home-Bildschirm“ installieren. Nach einem ersten vollständigen Online-Start die Wetteransicht im Flugmodus erneut öffnen. Live-Prognosen, Karten und Radar brauchen eine Verbindung.
+5. Für Updates zuerst die Dateien mit Versionskennung in `assets/`, dann Seiten und zuletzt `sw.js` übertragen. Vorherige Assets während des Übergangs behalten. HTML und `sw.js` beim Abruf revalidieren lassen. Die neue Offline-Version wird nach Schließen der alten App-Fenster aktiv.
+
+Auf dem NAS genügt Web Station. Bei vorgeschaltetem Proxy dort die Antwortheader `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy: same-origin` und `Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=(), usb=()` setzen. Die Beschränkungen für Skripte und Datenquellen sind in den HTML-Dateien enthalten.
+
+[Synology-Anleitung für Web Station](https://kb.synology.com/en-global/DSM/tutorial/How_to_host_a_website_on_Synology_NAS)
 
 ## Qualität
 
@@ -26,12 +37,6 @@ npm run test:e2e
 ```
 
 Tests verwenden ausschließlich lokale Fixtures und keine Live-API.
-
-Prüfe auch den vollständigen `npm audit`, nicht nur `--omit=dev`: Der
-Serverstart verwendet Wrangler aus den Entwicklungsabhängigkeiten.
-Derzeit bleibt die [ungepatchte braces-Lücke](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
-in Vinexts Build-Abhängigkeiten. `npm audit fix --force` schlägt hierfür ein
-inkompatibles Vinext-Downgrade vor und sollte nicht ungeprüft ausgeführt werden.
 
 ## Native Apps
 
@@ -45,11 +50,7 @@ Android Studio und Xcode sind kostenlos erhältlich. Apple und Google verlangen 
 
 ## Architektur
 
-Die Oberflächen verwenden eigenes CSS mit einem kleinen lokalen Reset, ohne
-Tailwind oder zusätzliche UI-Frameworks. Cloudflare/Vinext bleiben für den
-bestehenden Serverbetrieb nötig; Capacitor nur für die nativen Builds.
-`sharp` ist das Buildwerkzeug für die App-Icons und wird auch in den
-Serverwerkzeugen auf dieselbe gepatchte Version festgelegt.
+React und Vite erzeugen statische Seiten für Web Station. Capacitor verwendet dieselben Wetterkomponenten für iOS und Android.
 
 - `app/`: Landingpage, Wetter-App und Privacy-Ansicht
 - `lib/weather/`: Provider, Modelle, WMO-Mapping, Cache, Insights und Geolocation

@@ -5,9 +5,10 @@ import WeatherApp from '../app/app/page';
 import ImprintPage from '../app/impressum/page';
 import PrivacyPage from '../app/privacy/page';
 
-const Page = window.location.pathname === '/impressum'
+const path = window.location.pathname.replace(/\/$/, '');
+const Page = path === '/impressum'
   ? ImprintPage
-  : window.location.pathname === '/privacy'
+  : path === '/privacy'
     ? PrivacyPage
     : WeatherApp;
 

@@ -7,9 +7,9 @@ declare const __OPEN_METEO_GEOCODING_URL__: string;
 
 const hourlyFields = [
   'temperature_2m', 'apparent_temperature', 'weather_code', 'is_day', 'precipitation',
-  'precipitation_probability', 'relative_humidity_2m', 'cloud_cover', 'dew_point_2m',
+  'precipitation_probability', 'relative_humidity_2m', 'cloud_cover',
   'wind_speed_10m', 'wind_direction_10m', 'wind_gusts_10m', 'surface_pressure',
-  'visibility', 'uv_index', 'sunshine_duration',
+  'uv_index', 'sunshine_duration',
 ].join(',');
 
 const dailyFields = [
@@ -72,10 +72,10 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
       time: data.hourly.time[index], temperature: numberAt(data.hourly.temperature_2m, index),
       apparentTemperature: numberAt(data.hourly.apparent_temperature, index), weatherCode: numberAt(data.hourly.weather_code, index),
       isDay: Boolean(numberAt(data.hourly.is_day, index)), precipitation: numberAt(data.hourly.precipitation, index + 1, NaN),
-      precipitationProbability: numberAt(data.hourly.precipitation_probability, index), humidity: numberAt(data.hourly.relative_humidity_2m, index), dewPoint: numberAt(data.hourly.dew_point_2m, index),
+      precipitationProbability: numberAt(data.hourly.precipitation_probability, index), humidity: numberAt(data.hourly.relative_humidity_2m, index),
       cloudCover: numberAt(data.hourly.cloud_cover, index), windSpeed: numberAt(data.hourly.wind_speed_10m, index),
       windDirection: numberAt(data.hourly.wind_direction_10m, index), windGusts: numberAt(data.hourly.wind_gusts_10m, index),
-      pressure: numberAt(data.hourly.surface_pressure, index), visibility: numberAt(data.hourly.visibility, index), uvIndex: numberAt(data.hourly.uv_index, index),
+      pressure: numberAt(data.hourly.surface_pressure, index), uvIndex: numberAt(data.hourly.uv_index, index),
     });
     const currentHour = data.current.time.slice(0, 13) + ':00';
     const currentIndex = Math.max(0, data.hourly.time.indexOf(currentHour));
